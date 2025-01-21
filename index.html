@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+
+<body>
+  <link rel="stylesheet" type="text/css" href="index.css">
+  <div id="video" style="position: absolute;width:0;height:0;border:0;"></div>
+  <div style="display: flex; justify-content: center; align-items: center; width: 100%; margin-bottom: 10px;">
+    <input type="text" id="urlBox" placeholder="Enter video ID">
+    <button onclick="getVideoIdFromUrl(document.getElementById('urlBox').value)">Load Video</button>
+  </div>
+  <div style="display: flex; justify-content: center; align-items: center; flex-direction: column;">
+    <div id="card">
+      <img src="thumb.jpg" alt="Centered Image" style="width: 500px; height: 500px; border-radius: 10px;">
+      <div id="metaData" style="text-align: center; margin-top: 10px;">
+        <h1 id="songName">Song Name</h1>
+        <p id="artistName">Artist Name</p>
+      </div>
+      <div style="display: flex; justify-content: center; align-items: center; width: 100%; margin-top: 20px;">
+        <input type="range" id="scrubBar" min="0" max="100" value="0" style="width: 500px;">
+      </div>
+    </div>
+  </div>
+
+  <script src="index.js"></script>
+</body>
+
+</html>

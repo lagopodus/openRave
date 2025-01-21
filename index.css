@@ -1,0 +1,23 @@
+#scrubBar::-moz-range-thumb {
+    width: 15px;
+    height: 15px;
+    background: #FFF1E6;
+    border: none;
+    cursor: pointer;
+}
+
+#scrubBar{
+    background: #FFF1E6;
+    height: 3px;
+}
+#card{
+    background: linear-gradient(45deg, #001a33, #5d8ab6);  
+    padding: 20px; 
+    border-radius: 10px; 
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    animation: gradientAnimation 5s infinite alternate;
+}
+
+#metaData{
+    color: #FFF1E6;
+}
