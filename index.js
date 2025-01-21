@@ -15,7 +15,8 @@ function onYouTubeIframeAPIReady() {
             'playsinline': 1,
         },
         events: {
-            'onStateChange': onPlayerStateChange
+            'onStateChange': onPlayerStateChange,
+            'onReady': onReady
         }
     });
 }
@@ -117,8 +118,60 @@ socket.onerror = function (error) {
     console.log('WebSocket error: ', error);
 };
 
+
+//Player Wrapper
+
+setInterval(function () {
+    //sync player progress with scrub bar
+    refreshCurrentTimeElement(player.getCurrentTime());
+    refreshScrubberCursorPosition(player.getCurrentTime() / player.getDuration() * 1000);
+}, 1000);
+
 function onScrubbed(position) {
     console.log('scrubbed to ' + position);
     var scrubBar = document.getElementById('scrubBar');
-    scrubBar.style.background = `linear-gradient(to right, #FFF1E6 0%, #FFF1E6 ${position}%, gray ${position}%, gray 100%)`;
+    scrubBar.style.background = `linear-gradient(to right, #FFF1E6 0%, #FFF1E6 ${position / 10}%, gray ${position / 10}%, gray 100%)`;
+
+    refreshCurrentTimeElement(position / 1000 * player.getDuration());
+    console.log(position / 1000 * player.getDuration());
+}
+
+function onReady() {
+    refreshEndTimeElement(player.getDuration());
+    refreshCurrentTimeElement(player.getCurrentTime());
+}
+
+function str_pad_left(string, pad, length) {
+    return (new Array(length + 1).join(pad) + string).slice(-length);
+}
+
+function refreshCurrentTimeElement(currentTimeInSeconds) {
+    currentTimeInSeconds = Number(currentTimeInSeconds).toFixed(0);
+    var currentTimeElement = document.getElementById('currentTime');
+
+    var minutes = Math.floor(currentTimeInSeconds / 60);
+    var seconds = currentTimeInSeconds - minutes * 60;
+    const finalCurrentTimeTime = str_pad_left(minutes, '0', 2) + ':' + str_pad_left(seconds, '0', 2);
+
+    currentTimeElement.innerHTML = finalCurrentTimeTime;
+}
+
+function refreshEndTimeElement(endTimeInSeconds) {
+    endTimeInSeconds = Number(endTimeInSeconds).toFixed(0);
+    var endTimeElement = document.getElementById('endTime');
+
+    minutes = Math.floor(endTimeInSeconds / 60);
+    seconds = endTimeInSeconds - minutes * 60;
+    const finalEndTime = str_pad_left(minutes, '0', 2) + ':' + str_pad_left(seconds, '0', 2);
+
+    endTimeElement.innerHTML = finalEndTime;
+}
+
+function refreshScrubberCursorPosition(position) {
+    position = Number(position).toFixed(0);
+
+    var scrubber = document.getElementById('scrubBar');
+    scrubber.value = position;
+
+    onScrubbed(position);
 }
