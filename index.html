@@ -3,7 +3,7 @@
 
 <body>
   <link rel="stylesheet" type="text/css" href="index.css">
-  <div id="video" style="position: absolute;width:0;height:0;border:0;"></div>
+  <div id="video"></div>
   <div style="display: flex; justify-content: center; align-items: center; width: 100%; margin-bottom: 10px;">
     <input type="text" id="urlBox" placeholder="Enter video ID">
     <button onclick="getVideoIdFromUrl(document.getElementById('urlBox').value)">Load Video</button>
@@ -16,7 +16,12 @@
         <p id="artistName">Artist Name</p>
       </div>
       <div style="display: flex; justify-content: center; align-items: center; width: 100%; margin-top: 20px;">
-        <input type="range" id="scrubBar" min="0" max="100" value="0" style="width: 500px;">
+        <input type="range" id="scrubBar" min="0" max="100" value="0" style="width: 500px;"
+          oninput="onScrubbed(this.value)">
+      </div>
+      <div id="scrubBarProgressWrapper">
+        <span id="startTime">0:00</span>
+        <span id="endTime">3:30</span>
       </div>
     </div>
   </div>

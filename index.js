@@ -85,7 +85,7 @@ function receivedVideoId(videoId) {
     player.loadVideoById(videoId);
 }
 
-var socket = new WebSocket('ws://192.168.178.20:8080');
+var socket = new WebSocket('ws://10.20.135.12:8081');
 
 socket.onopen = function (event) {
     console.log('WebSocket is connected.');
@@ -116,3 +116,9 @@ socket.onclose = function (event) {
 socket.onerror = function (error) {
     console.log('WebSocket error: ', error);
 };
+
+function onScrubbed(position) {
+    console.log('scrubbed to ' + position);
+    var scrubBar = document.getElementById('scrubBar');
+    scrubBar.style.background = `linear-gradient(to right, #FFF1E6 0%, #FFF1E6 ${position}%, gray ${position}%, gray 100%)`;
+}

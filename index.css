@@ -7,7 +7,7 @@
 }
 
 #scrubBar{
-    background: #FFF1E6;
+    background: linear-gradient(to right, #FFF1E6 0%, #FFF1E6 0%, gray 0%, gray 100%);
     height: 3px;
 }
 #card{
@@ -20,4 +20,16 @@
 
 #metaData{
     color: #FFF1E6;
+}
+
+#scrubBarProgressWrapper{
+    position: relative;
+    width: 100%;
+    height: 3px;
+    display: flex; 
+    justify-content: space-between; 
+    width: 510px; 
+    margin-top: 5px;
+    color: #FFF1E6;
+    margin-bottom: 10px;
 }
