@@ -34,7 +34,7 @@ wss.on('connection', function connection(ws: WebSocket, request) {
     
     wss.clients.forEach(client => {
       if (client !== ws) {
-        client.send(message);
+        client.send(message.toString());
       }
     });
   });

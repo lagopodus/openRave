@@ -130,6 +130,7 @@ socket.onopen = function () {
     console.log('WebSocket is connected.');
 };
 socket.onmessage = function (event) {
+    console.log('Message from server: ', event.data.toString());
     var message = event.data.toString();
     if (message.startsWith('playing')) {
         receivedPlay();

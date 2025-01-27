@@ -22,7 +22,7 @@ wss.on('connection', function connection(ws, request) {
         console.log("Received message: ".concat(message));
         wss.clients.forEach(function (client) {
             if (client !== ws) {
-                client.send(message);
+                client.send(message.toString());
             }
         });
     });
