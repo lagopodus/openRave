@@ -31,24 +31,25 @@ wss.on('connection', function connection(ws: WebSocket, request) {
 
   ws.on('message', (message: string) => {
     console.log(`Received message: ${message}`);
+
+    if (message.toString() === 'keepalive') {
+      ws.send('keepalive');
+      return;
+    }
+    if (message.toString().startsWith('videoId:')) {
+      rooms[roomId].videoId = message.toString().split(': ')[1];
+    }
+    if (message.toString().startsWith('seek:')) {
+      rooms[roomId].timestamp = parseFloat(message.toString().split(': ')[1]);
+    }
+    if (message.toString() === 'playing') {
+      rooms[roomId].state = 'playing';
+    }
+    if (message.toString() === 'paused') {
+      rooms[roomId].state = 'paused';
+    }
     
     wss.clients.forEach(client => {
-      if (message.toString() === 'keepalive') {
-        ws.send('keepalive');
-        return;
-      }
-      if (message.toString().startsWith('videoId:')) {
-        rooms[roomId].videoId = message.toString().split(': ')[1];
-      }
-      if (message.toString().startsWith('seek:')) {
-        rooms[roomId].timestamp = parseFloat(message.toString().split(': ')[1]);
-      }
-      if (message.toString() === 'playing') {
-        rooms[roomId].state = 'playing';
-      }
-      if (message.toString() === 'paused') {
-        rooms[roomId].state = 'paused';
-      }
       if (client !== ws) {
         client.send(message.toString());
       }
