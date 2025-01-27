@@ -153,13 +153,11 @@ setInterval(() => {
 }, 1000);
 
 function onScrubbed(position: number) {
-    console.log('scrubbed to ' + position);
     const scrubBar = document.getElementById('scrubBar') as HTMLDivElement;
     scrubBar.style.background = `linear-gradient(to right, #FFF1E6 0%, #FFF1E6 ${position / 10}%, gray ${position / 10}%, gray 100%)`;
 
     if (player) {
         refreshCurrentTimeElement((position / 1000) * player.getDuration());
-        console.log((position / 1000) * player.getDuration());
     }
 }
 
