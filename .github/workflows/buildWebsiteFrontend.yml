@@ -27,4 +27,4 @@ jobs:
           context: "{{defaultContext}}:app"
           push: true
           tags: |
-            alexinabox/openRaveWebsite:latest
+            alexinabox/openrave-website:latest

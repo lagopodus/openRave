@@ -27,4 +27,4 @@ jobs:
           context: "{{defaultContext}}:server"
           push: true
           tags: |
-            alexinabox/openRaveWebSocketServer:latest
+            alexinabox/openrave-websocket:latest
