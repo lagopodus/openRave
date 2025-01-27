@@ -21,6 +21,22 @@ wss.on('connection', function connection(ws, request) {
     ws.on('message', function (message) {
         console.log("Received message: ".concat(message));
         wss.clients.forEach(function (client) {
+            if (message.toString() === 'keepalive') {
+                ws.send('keepalive');
+                return;
+            }
+            if (message.toString().startsWith('videoId:')) {
+                rooms[roomId].videoId = message.toString().split(': ')[1];
+            }
+            if (message.toString().startsWith('seek:')) {
+                rooms[roomId].timestamp = parseFloat(message.toString().split(': ')[1]);
+            }
+            if (message.toString() === 'playing') {
+                rooms[roomId].state = 'playing';
+            }
+            if (message.toString() === 'paused') {
+                rooms[roomId].state = 'paused';
+            }
             if (client !== ws) {
                 client.send(message.toString());
             }
