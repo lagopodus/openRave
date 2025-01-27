@@ -6,11 +6,11 @@
   <div id="video"></div>
   <div style="display: flex; justify-content: center; align-items: center; width: 100%; margin-bottom: 10px;">
     <input type="text" id="urlBox" placeholder="Enter video ID">
-    <button onclick="getVideoIdFromUrl(document.getElementById('urlBox').value)">Load Video</button>
+    <button onclick="submitNewUrl(document.getElementById('urlBox').value)">Load Video</button>
   </div>
   <div style="display: flex; justify-content: center; align-items: center; flex-direction: column;">
     <div id="card">
-      <img src="thumb.jpg" alt="Centered Image" style="width: 500px; height: 500px; border-radius: 10px;">
+      <img id="coverImage" src="thumb.jpg" alt="Cover Image" style="width: 500px; height: 500px; border-radius: 10px;">
       <div id="metaData" style="text-align: center; margin-top: 10px;">
         <h1 id="songName">Song Name</h1>
         <p id="artistName">Artist Name</p>

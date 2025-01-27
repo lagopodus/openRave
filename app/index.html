@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Open Rave</title>
+    <link rel="stylesheet" href="index.css">
+    <script src="index.js" defer></script>
+</head>
+
+<body>
+    <div class="container">
+        <button id="startRaveButton" class="button">Start Rave</button>
+        <div id="codeInputJoin">
+            <input id="joinRaveCode" type="number" class="input-field" placeholder="123456" maxlength="6" minlength="6"
+                onKeyPress="if(this.value.length==6) return false;" required />
+            <button id="joinRaveButton" class="small-button">Join</button>
+        </div>
+    </div>
+</body>
+
+</html>

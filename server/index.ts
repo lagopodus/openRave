@@ -1,0 +1,69 @@
+import * as WebSocket from 'ws'
+
+const wss = new WebSocket.Server({ port: 3000 });
+let rooms: { [key: string]: Room } = {};
+
+interface Room {
+  videoId: string;
+  timestamp: number;
+  state: 'playing' | 'paused';
+  users: WebSocket[];
+}
+
+
+wss.on('connection', function connection(ws: WebSocket, request) {
+  console.log('New client connected to room ' + getRoomId(request.url||''));
+
+  const roomId: string = getRoomId(request.url||'');
+  if (!rooms[roomId]) {
+    rooms[roomId] = {
+      videoId: '',
+      timestamp: 0,
+      state: 'paused',
+      users: [ws]
+    };
+  } else {
+    rooms[roomId].users.push(ws);
+    updateUserOnCurrentRoomState(ws, rooms[roomId]);
+  }
+
+
+
+  ws.on('message', (message: string) => {
+    console.log(`Received message: ${message}`);
+    
+    wss.clients.forEach(client => {
+      if (client !== ws) {
+        client.send(`Broadcast: ${message}`);
+      }
+    });
+  });
+
+  ws.on('close', () => {
+    console.log('Client disconnected');
+    
+    if (!rooms[roomId]) return;
+
+    rooms[roomId].users = rooms[roomId].users.filter(user => user !== ws);
+    
+    if (rooms[roomId].users.length === 0) {
+      delete rooms[roomId];
+    }
+  });
+});
+
+function getRoomId(path: string): string {
+  const re: RegExp = /room=([^&/]*)/;
+  const match = re.exec(path);
+  return match ? match[1] : 'default';
+}
+
+function updateUserOnCurrentRoomState(ws: WebSocket, room: Room): void{
+  const videoId: string = room.videoId;
+  const timestamp: number = room.timestamp;
+  const state: "playing" | "paused" = room.state; 
+
+  ws.send("videoId: " + videoId);
+  ws.send("seek: " + timestamp);
+  ws.send(state);
+}
