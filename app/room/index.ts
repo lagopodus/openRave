@@ -108,7 +108,7 @@ socket.onopen = () => {
 };
 
 socket.onmessage = (event) => {
-    const message = event.data;
+    const message = event.data.toString();
     if (message.startsWith('playing')) {
         receivedPlay();
     }
