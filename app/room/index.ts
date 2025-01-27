@@ -153,6 +153,10 @@ setInterval(() => {
     }
 }, 1000);
 
+setInterval(() => {
+    socket.send('keepalive');
+}, 10000);
+
 function onScrubbed(position: number) {
     const scrubBar = document.getElementById('scrubBar') as HTMLDivElement;
     scrubBar.style.background = `linear-gradient(to right, #FFF1E6 0%, #FFF1E6 ${position / 10}%, gray ${position / 10}%, gray 100%)`;

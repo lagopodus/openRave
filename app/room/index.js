@@ -170,6 +170,9 @@ setInterval(function () {
         refreshCoverImage(getVideoIdFromUrl(player.getVideoUrl()));
     }
 }, 1000);
+setInterval(function () {
+    socket.send('keepalive');
+}, 10000);
 function onScrubbed(position) {
     var scrubBar = document.getElementById('scrubBar');
     scrubBar.style.background = "linear-gradient(to right, #FFF1E6 0%, #FFF1E6 ".concat(position / 10, "%, gray ").concat(position / 10, "%, gray 100%)");
