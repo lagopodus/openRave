@@ -170,12 +170,10 @@ setInterval(function () {
     }
 }, 1000);
 function onScrubbed(position) {
-    console.log('scrubbed to ' + position);
     var scrubBar = document.getElementById('scrubBar');
     scrubBar.style.background = "linear-gradient(to right, #FFF1E6 0%, #FFF1E6 ".concat(position / 10, "%, gray ").concat(position / 10, "%, gray 100%)");
     if (player) {
         refreshCurrentTimeElement((position / 1000) * player.getDuration());
-        console.log((position / 1000) * player.getDuration());
     }
 }
 function onReady() {
