@@ -48,7 +48,7 @@ wss.on('connection', function connection(ws: WebSocket, request) {
     if (message.toString() === 'paused') {
       rooms[roomId].state = 'paused';
     }
-    
+
     wss.clients.forEach(client => {
       if (client !== ws) {
         client.send(message.toString());
@@ -75,12 +75,13 @@ function getRoomId(path: string): string {
   return match ? match[1] : 'default';
 }
 
-function updateUserOnCurrentRoomState(ws: WebSocket, room: Room): void{
+async function updateUserOnCurrentRoomState(ws: WebSocket, room: Room): Promise<void> {
   const videoId: string = room.videoId;
   const timestamp: number = room.timestamp;
   const state: "playing" | "paused" = room.state; 
 
   ws.send("videoId: " + videoId);
+  await new Promise(resolve => setTimeout(resolve, 1000));
   ws.send("seek: " + timestamp);
   ws.send(state);
 }

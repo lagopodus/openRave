@@ -87,53 +87,6 @@ function receivedVideoId(videoId: string) {
     player?.loadVideoById(videoId);
 }
 
-const socket = new WebSocket('https://openRave.zeitvertreib.vip/backend?room=' + getQueryVariable('room'));
-console.log(getQueryVariable('room'));
-
-function getQueryVariable(variable: string): string {
-    var query: String = window.location.search.substring(1);
-    var vars: String[] = query.split("&");
-    for (var i=0;i<vars.length;i++) {
-      var pair: string[] = vars[i].split("=");
-      if (pair[0] == variable) {
-        return pair[1];
-      }
-    } 
-    alert('You are not supposed to be here!!!');
-    return '';
-  }
-
-socket.onopen = () => {
-    console.log('WebSocket is connected.');
-};
-
-socket.onmessage = (event) => {
-    console.log('Message from server: ', event.data.toString());
-    const message = event.data.toString();
-    if (message.startsWith('playing')) {
-        receivedPlay();
-    }
-    if (message.startsWith('paused')) {
-        receivedPause();
-    }
-    if (message.startsWith('seek')) {
-        const time = parseFloat(message.split(': ')[1]);
-        receivedSeek(time);
-    }
-    if (message.startsWith('videoId')) {
-        const videoId = message.split(': ')[1];
-        receivedVideoId(videoId);
-    }
-};
-
-socket.onclose = () => {
-    console.log('WebSocket is closed.');
-};
-
-socket.onerror = (error) => {
-    console.log('WebSocket error: ', error);
-};
-
 function submitNewUrl(url: string): void {
     const videoId = getVideoIdFromUrl(url);
     if (videoId === '') {
@@ -166,6 +119,8 @@ function onScrubbed(position: number) {
     }
 }
 
+var socket: WebSocket;
+
 async function onReady() {
     if (player) {
         refreshEndTimeElement(player.getDuration());
@@ -175,6 +130,53 @@ async function onReady() {
         const videoId = getVideoIdFromUrl(player.getVideoUrl());
         coverImage.src = `https://yttf.zeitvertreib.vip/?url=https://music.youtube.com/watch?v=${videoId}`;
     }
+
+    socket = new WebSocket('https://openRave.zeitvertreib.vip/backend?room=' + getQueryVariable('room'));
+    console.log(getQueryVariable('room'));
+
+    function getQueryVariable(variable: string): string {
+        var query: String = window.location.search.substring(1);
+        var vars: String[] = query.split("&");
+        for (var i=0;i<vars.length;i++) {
+        var pair: string[] = vars[i].split("=");
+        if (pair[0] == variable) {
+            return pair[1];
+        }
+        } 
+        alert('You are not supposed to be here!!!');
+        return '';
+    }
+
+    socket.onopen = () => {
+        console.log('WebSocket is connected.');
+    };
+
+    socket.onmessage = (event) => {
+        console.log('Message from server: ', event.data.toString());
+        const message = event.data.toString();
+        if (message.startsWith('playing')) {
+            receivedPlay();
+        }
+        if (message.startsWith('paused')) {
+            receivedPause();
+        }
+        if (message.startsWith('seek')) {
+            const time = parseFloat(message.split(': ')[1]);
+            receivedSeek(time);
+        }
+        if (message.startsWith('videoId')) {
+            const videoId = message.split(': ')[1];
+            receivedVideoId(videoId);
+        }
+    };
+
+    socket.onclose = () => {
+        console.log('WebSocket is closed.');
+    };
+
+    socket.onerror = (error) => {
+        console.log('WebSocket error: ', error);
+    };
 }
 
 function str_pad_left(string: string, pad: string, length: number) {

@@ -112,47 +112,6 @@ function receivedSeek(time) {
 function receivedVideoId(videoId) {
     player === null || player === void 0 ? void 0 : player.loadVideoById(videoId);
 }
-var socket = new WebSocket('https://openRave.zeitvertreib.vip/backend?room=' + getQueryVariable('room'));
-console.log(getQueryVariable('room'));
-function getQueryVariable(variable) {
-    var query = window.location.search.substring(1);
-    var vars = query.split("&");
-    for (var i = 0; i < vars.length; i++) {
-        var pair = vars[i].split("=");
-        if (pair[0] == variable) {
-            return pair[1];
-        }
-    }
-    alert('You are not supposed to be here!!!');
-    return '';
-}
-socket.onopen = function () {
-    console.log('WebSocket is connected.');
-};
-socket.onmessage = function (event) {
-    console.log('Message from server: ', event.data.toString());
-    var message = event.data.toString();
-    if (message.startsWith('playing')) {
-        receivedPlay();
-    }
-    if (message.startsWith('paused')) {
-        receivedPause();
-    }
-    if (message.startsWith('seek')) {
-        var time = parseFloat(message.split(': ')[1]);
-        receivedSeek(time);
-    }
-    if (message.startsWith('videoId')) {
-        var videoId = message.split(': ')[1];
-        receivedVideoId(videoId);
-    }
-};
-socket.onclose = function () {
-    console.log('WebSocket is closed.');
-};
-socket.onerror = function (error) {
-    console.log('WebSocket error: ', error);
-};
 function submitNewUrl(url) {
     var videoId = getVideoIdFromUrl(url);
     if (videoId === '') {
@@ -180,8 +139,21 @@ function onScrubbed(position) {
         refreshCurrentTimeElement((position / 1000) * player.getDuration());
     }
 }
+var socket;
 function onReady() {
     return __awaiter(this, void 0, void 0, function () {
+        function getQueryVariable(variable) {
+            var query = window.location.search.substring(1);
+            var vars = query.split("&");
+            for (var i = 0; i < vars.length; i++) {
+                var pair = vars[i].split("=");
+                if (pair[0] == variable) {
+                    return pair[1];
+                }
+            }
+            alert('You are not supposed to be here!!!');
+            return '';
+        }
         var coverImage, videoId;
         return __generator(this, function (_a) {
             if (player) {
@@ -191,6 +163,35 @@ function onReady() {
                 videoId = getVideoIdFromUrl(player.getVideoUrl());
                 coverImage.src = "https://yttf.zeitvertreib.vip/?url=https://music.youtube.com/watch?v=".concat(videoId);
             }
+            socket = new WebSocket('https://openRave.zeitvertreib.vip/backend?room=' + getQueryVariable('room'));
+            console.log(getQueryVariable('room'));
+            socket.onopen = function () {
+                console.log('WebSocket is connected.');
+            };
+            socket.onmessage = function (event) {
+                console.log('Message from server: ', event.data.toString());
+                var message = event.data.toString();
+                if (message.startsWith('playing')) {
+                    receivedPlay();
+                }
+                if (message.startsWith('paused')) {
+                    receivedPause();
+                }
+                if (message.startsWith('seek')) {
+                    var time = parseFloat(message.split(': ')[1]);
+                    receivedSeek(time);
+                }
+                if (message.startsWith('videoId')) {
+                    var videoId = message.split(': ')[1];
+                    receivedVideoId(videoId);
+                }
+            };
+            socket.onclose = function () {
+                console.log('WebSocket is closed.');
+            };
+            socket.onerror = function (error) {
+                console.log('WebSocket error: ', error);
+            };
             return [2 /*return*/];
         });
     });
