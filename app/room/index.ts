@@ -215,6 +215,9 @@ interface OembedMetadata {
 async function refreshMostMetadata(): Promise<void> {
     const metadata: OembedMetadata = await getOembedObject(getVideoIdFromUrl(player?.getVideoUrl() || ''));
     refreshSongInfo(metadata.author_name, metadata.title);
+    if (player){
+        refreshEndTimeElement(player.getDuration());
+    }
     return;
 }
 
@@ -230,6 +233,7 @@ function refreshCurrentTimeElement(currentTimeInSeconds: number): void {
 }
 
 function refreshEndTimeElement(endTimeInSeconds: number): void {
+    console.log(endTimeInSeconds + ' seconds');
     endTimeInSeconds = Number(endTimeInSeconds.toFixed(0));
     const endTimeElement = document.getElementById('endTime') as HTMLDivElement;
 

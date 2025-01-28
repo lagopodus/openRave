@@ -58,7 +58,7 @@ function onYouTubeIframeAPIReady() {
 }
 function onPlayerStateChange(event) {
     if (event.data === YT.PlayerState.ENDED) {
-        console.log('ended');
+        notifyEnded();
     }
     if (event.data === YT.PlayerState.BUFFERING) {
         console.log('buffering');
@@ -78,6 +78,10 @@ setInterval(function () {
     lastPlayerTime = (player === null || player === void 0 ? void 0 : player.getCurrentTime()) || 0;
 }, 1000);
 // SENDING
+function notifyEnded() {
+    console.log('video ended');
+    socket.send('ended');
+}
 function userPressedPlay() {
     console.log('user pressed play');
     socket.send('playing');
@@ -216,6 +220,9 @@ function refreshMostMetadata() {
                 case 1:
                     metadata = _a.sent();
                     refreshSongInfo(metadata.author_name, metadata.title);
+                    if (player) {
+                        refreshEndTimeElement(player.getDuration());
+                    }
                     return [2 /*return*/];
             }
         });
@@ -230,6 +237,7 @@ function refreshCurrentTimeElement(currentTimeInSeconds) {
     currentTimeElement.innerHTML = finalCurrentTimeTime;
 }
 function refreshEndTimeElement(endTimeInSeconds) {
+    console.log(endTimeInSeconds + ' seconds');
     endTimeInSeconds = Number(endTimeInSeconds.toFixed(0));
     var endTimeElement = document.getElementById('endTime');
     var minutes = Math.floor(endTimeInSeconds / 60);
