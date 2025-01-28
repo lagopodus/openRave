@@ -101,6 +101,14 @@ function getVideoIdFromUrl(url) {
 }
 // RECEIVING
 function receivedPlay() {
+    console.log('received play');
+    if ((player === null || player === void 0 ? void 0 : player.getPlayerState()) === YT.PlayerState.BUFFERING) {
+        console.log('player is buffering, retrying in 50ms');
+        setTimeout(function () {
+            receivedPlay();
+        }, 50);
+        return;
+    }
     player === null || player === void 0 ? void 0 : player.playVideo();
 }
 function receivedPause() {

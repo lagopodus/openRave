@@ -56,6 +56,10 @@ wss.on('connection', function connection(ws: WebSocket, request) {
     if (message.toString() === 'paused') {
       rooms[roomId].state = 'paused';
     }
+    if (message.toString() === 'ended') {
+      rooms[roomId].state = 'paused';
+      return;
+    }
 
     wss.clients.forEach(client => {
       if (client !== ws) {

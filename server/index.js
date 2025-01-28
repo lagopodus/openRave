@@ -80,6 +80,10 @@ wss.on('connection', function connection(ws, request) {
         if (message.toString() === 'paused') {
             rooms[roomId].state = 'paused';
         }
+        if (message.toString() === 'ended') {
+            rooms[roomId].state = 'paused';
+            return;
+        }
         wss.clients.forEach(function (client) {
             if (client !== ws) {
                 client.send(message.toString());

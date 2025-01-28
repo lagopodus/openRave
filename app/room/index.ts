@@ -22,9 +22,10 @@ function onYouTubeIframeAPIReady() {
     });
 }
 
+
 function onPlayerStateChange(event: YT.OnStateChangeEvent) {
     if (event.data === YT.PlayerState.ENDED) {
-        console.log('ended');
+        notifyEnded();
     }
     if (event.data === YT.PlayerState.BUFFERING) {
         console.log('buffering');
@@ -46,17 +47,21 @@ setInterval(() => {
 }, 1000);
 
 // SENDING
-function userPressedPlay() {
+function notifyEnded(): void {
+    console.log('video ended');
+    socket.send('ended');
+}
+function userPressedPlay(): void {
     console.log('user pressed play');
     socket.send('playing');
 }
 
-function userPressedPause() {
+function userPressedPause(): void {
     console.log('user pressed pause');
     socket.send('paused');
 }
 
-function userSeeked(time: number) {
+function userSeeked(time: number): void {
     socket.send('seek: ' + time);
 }
 
@@ -72,6 +77,14 @@ function getVideoIdFromUrl(url: string): string {
 
 // RECEIVING
 function receivedPlay() {
+    console.log('received play');
+    if (player?.getPlayerState() === YT.PlayerState.BUFFERING) {
+        console.log('player is buffering, retrying in 50ms');
+        setTimeout(() => {
+            receivedPlay();
+        }, 50);
+        return;
+    }
     player?.playVideo();
 }
 
