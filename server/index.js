@@ -39,6 +39,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var WebSocket = require("ws");
 var wss = new WebSocket.Server({ port: 3000 });
 var rooms = {};
+setInterval(function () {
+    for (var _i = 0, _a = Object.entries(rooms); _i < _a.length; _i++) {
+        var _b = _a[_i], roomId = _b[0], room = _b[1];
+        if (room.state === 'playing') {
+            room.timestamp += 1;
+        }
+    }
+}, 1000);
 wss.on('connection', function connection(ws, request) {
     console.log('New client connected to room ' + getRoomId(request.url || ''));
     var roomId = getRoomId(request.url || '');
