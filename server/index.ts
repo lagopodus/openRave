@@ -10,6 +10,14 @@ interface Room {
   users: WebSocket[];
 }
 
+setInterval(() => {
+  for (const [roomId, room] of Object.entries(rooms)) {
+    if (room.state === 'playing') {
+      room.timestamp += 1;
+    }
+  }
+}, 1000);
+
 
 wss.on('connection', function connection(ws: WebSocket, request) {
   console.log('New client connected to room ' + getRoomId(request.url||''));
