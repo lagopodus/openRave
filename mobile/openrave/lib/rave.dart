@@ -1,66 +1,64 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class Rave extends StatefulWidget {
-  const Rave({super.key});
+  const Rave({super.key, required this.roomCode});
+
+  final String roomCode;
 
   @override
-  State<Rave> createState() => _RaveState();
+  State<Rave> createState() => _RaveState(roomCode: roomCode);
 }
 
 class _RaveState extends State<Rave> {
-  String _roomCode = '12334';
+  final String roomCode;
+  _RaveState({required this.roomCode});
 
   @override
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
       navigationBar: CupertinoNavigationBar(
-        middle: Text('OpenRave in Room $_roomCode'),
+        middle: Center(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              SelectableText('Room: $roomCode'),
+              const SizedBox(width: 10),
+              IconButton(
+                onPressed: () async {
+                  await Clipboard.setData(ClipboardData(text: roomCode));
+                  // copied successfully
+                },
+                icon: Icon(
+                  Icons.copy,
+                  color: Colors.blueAccent,
+                  size: 24.0,
+                  semanticLabel: 'Copy the room code.',
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
       child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            SizedBox(
-              width: 250,
-              child: CupertinoButton.filled(
-                borderRadius: BorderRadius.circular(7),
-                onPressed: () {},
-                child: const Text('Start a Rave'),
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              Center(
+                child: Text(
+                  roomCode,
+                  style: TextStyle(
+                    fontSize: 24,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
               ),
-            ),
-            const SizedBox(height: 15),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                Container(
-                  alignment: Alignment.centerLeft,
-                  width: 100,
-                  decoration: BoxDecoration(
-                    border: Border.all(color: CupertinoColors.systemGrey),
-                    borderRadius: BorderRadius.circular(5),
-                  ),
-                  child: CupertinoTextField(
-                    maxLength: 6,
-                    maxLines: 1,
-                    spellCheckConfiguration: SpellCheckConfiguration.disabled(),
-                    placeholder: '012345',
-                    onChanged: (value) {
-                      setState(() {
-                        _roomCode = value;
-                      });
-                    },
-                  ),
-                ),
-                const SizedBox(width: 20),
-                CupertinoButton.filled(
-                  borderRadius: BorderRadius.circular(7),
-                  onPressed: () {},
-                  child: const Text('Join a Rave!'),
-                ),
-              ],
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'rave.dart';
+import 'dart:math';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -10,7 +11,16 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  String _roomCode = '';
+  final _random = new Random();
+  String _roomCode = "";
+
+  String randomRoomCode() {
+    String code = "";
+    for (int i = 0; i < 6; i++) {
+      code += _random.nextInt(10).toString();
+    }
+    return code;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +36,16 @@ class _HomeState extends State<Home> {
               width: 250,
               child: CupertinoButton.filled(
                 borderRadius: BorderRadius.circular(7),
-                onPressed: () {},
+                onPressed: () {
+                  Navigator.of(context).push(
+                    CupertinoPageRoute<void>(
+                      builder: (context) => Rave(
+                        roomCode: randomRoomCode(),
+                      ),
+                    ),
+                  );
+                  return;
+                },
                 child: const Text('Start a Rave'),
               ),
             ),
@@ -61,7 +80,9 @@ class _HomeState extends State<Home> {
                     if (_roomCode.length == 6 && isNumeric(_roomCode)) {
                       Navigator.of(context).push(
                         CupertinoPageRoute<void>(
-                          builder: (context) => const Rave(),
+                          builder: (context) => Rave(
+                            roomCode: _roomCode,
+                          ),
                         ),
                       );
                       return;
@@ -96,8 +117,5 @@ class _HomeState extends State<Home> {
 }
 
 bool isNumeric(String s) {
-  if (s == null) {
-    return false;
-  }
   return double.tryParse(s) != null;
 }
