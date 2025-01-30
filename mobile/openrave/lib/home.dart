@@ -1,5 +1,4 @@
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
 import 'rave.dart';
 import 'dart:math';
 
@@ -11,7 +10,7 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  final _random = new Random();
+  final _random = Random();
   String _roomCode = "";
 
   String randomRoomCode() {
