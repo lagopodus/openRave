@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'rave.dart';
+import 'miniRave.dart';
 import 'dart:math';
 
 class Home extends StatefulWidget {
@@ -80,7 +81,7 @@ class _HomeState extends State<Home> {
                     if (_roomCode.length == 6 && isNumeric(_roomCode)) {
                       Navigator.of(context).push(
                         CupertinoPageRoute<void>(
-                          builder: (context) => Rave(
+                          builder: (context) => MiniRave(
                             roomCode: _roomCode,
                           ),
                         ),
