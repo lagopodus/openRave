@@ -1,28 +1,50 @@
 import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
-class Metadata {
-  String artistName = "";
-  String songTitle = "";
-  String coverUrl = "https://placehold.co/400/transparent/transparent/png";
-  int duration = 0;
-  int progress = 0;
-  bool isPlaying = false;
+class Metadata extends ChangeNotifier {
+  String _artistName = "";
+  String _songTitle = "";
+  String _coverUrl = "https://placehold.co/400/transparent/transparent/png";
+  int _duration = 0;
+  int _progress = 0;
+  bool _isPlaying = false;
 
+  // Getters
+  String get artistName => _artistName;
+  String get songTitle => _songTitle;
+  String get coverUrl => _coverUrl;
+  int get duration => _duration;
+  int get progress => _progress;
+  bool get isPlaying => _isPlaying;
+
+  // Setters with notifyListeners()
+  void setPlayingStatus(bool playing) {
+    _isPlaying = playing;
+    notifyListeners();
+  }
+
+  void setProgress(int progress) {
+    _progress = progress;
+    notifyListeners();
+  }
+
+  // Fetch metadata and update properties
   Future<void> fetchMetadata(String videoId) async {
-    // Use this url "https://www.youtube.com/oembed?url=https://music.youtube.com/watch?v=<videoId>" to fetch metadata
-    // Replace <videoId> with the actual room code from your database or API
     String url =
         "https://www.youtube.com/oembed?url=https://music.youtube.com/watch?v=$videoId";
     final response = await http.get(Uri.parse(url));
+
     if (response.statusCode == 200) {
       Map<String, dynamic> data = jsonDecode(response.body);
-      artistName = data['author_name'];
-      songTitle = data['title'];
-      coverUrl = "https://yttf.zeitvertreib.vip/?url=$url";
-      duration = 0;
-      progress = 0;
-      isPlaying = true;
+      _artistName = data['author_name'];
+      _songTitle = data['title'];
+      _coverUrl = "https://yttf.zeitvertreib.vip/?url=$url";
+      _duration = 0;
+      _progress = 0;
+      _isPlaying = true;
+
+      notifyListeners(); // Notifies all listeners to rebuild
     } else {
       throw Exception('Failed to fetch metadata');
     }

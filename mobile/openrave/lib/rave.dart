@@ -3,8 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
-import 'helper/metadata.dart';
-
 class Rave extends StatefulWidget {
   const Rave({super.key, required this.roomCode});
 
@@ -18,27 +16,38 @@ class _RaveState extends State<Rave> {
   final String roomCode;
   _RaveState({required this.roomCode});
 
-  static String myVideoId = "NFw-FrYmAEw";
+  static String myVideoId = "cQjW6OOpo4g";
 
-  Metadata _metadata = Metadata();
+  final YoutubePlayerBuilder _playerBuilder = YoutubePlayerBuilder(
+    builder: (p0, p1) => p1,
+    player: YoutubePlayer(
+      controller: YoutubePlayerController(
+        initialVideoId: myVideoId,
+        flags: const YoutubePlayerFlags(
+          autoPlay: true,
+          mute: false,
+        ),
+      ),
+    ),
+  );
 
   @override
   void initState() {
     super.initState();
-    _metadata.fetchMetadata(myVideoId).then((metadata) {
-      setState(() {
-        _metadata = _metadata;
-      });
+
+    _playerBuilder.player.controller.addListener(() {
+      if (mounted) {
+        setState(() {}); // Rebuild when Metadata updates
+      }
     });
   }
 
-  final YoutubePlayerController _controller = YoutubePlayerController(
-    initialVideoId: myVideoId,
-    flags: const YoutubePlayerFlags(
-      autoPlay: true,
-      mute: false,
-    ),
-  );
+  @override
+  void dispose() {
+    _playerBuilder.player.controller
+        .removeListener(() {}); // Remove listener to prevent memory leaks
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -72,10 +81,7 @@ class _RaveState extends State<Rave> {
           SizedBox(
             width: 0,
             height: 0,
-            child: YoutubePlayer(
-              controller: _controller,
-              liveUIColor: Colors.amber,
-            ),
+            child: _playerBuilder,
           ), // Invisible
           Center(
             child: Padding(
@@ -96,16 +102,69 @@ class _RaveState extends State<Rave> {
                     height: 10,
                   ),
                   Center(
-                    child: Text(
-                      _metadata.artistName,
+                      child: Text.rich(
+                    TextSpan(
+                      style: TextStyle(fontSize: 18),
+                      children: [
+                        TextSpan(text: "Artist: "),
+                        TextSpan(
+                            text: _playerBuilder
+                                .player.controller.metadata.author),
+                        TextSpan(text: "\n"),
+                        TextSpan(text: "Song: "),
+                        TextSpan(
+                            text: _playerBuilder
+                                .player.controller.metadata.title),
+                        TextSpan(text: "\n"),
+                        TextSpan(text: "Is Playing: "),
+                        TextSpan(
+                            text:
+                                _playerBuilder.player.controller.value.isPlaying
+                                    ? "Yes"
+                                    : "No"),
+                        TextSpan(text: "\n"),
+                        TextSpan(text: "Progress: "),
+                        TextSpan(
+                          text: _playerBuilder.player.controller.value.position
+                              .toString(),
+                        ),
+                        TextSpan(text: "\n"),
+                        TextSpan(text: "Duration: "),
+                        TextSpan(
+                          text: _playerBuilder
+                              .player.controller.metadata.duration
+                              .toString(),
+                        ),
+                      ],
                     ),
+                  )),
+                  CupertinoButton.filled(
+                    onPressed: () {
+                      _playerBuilder.player.controller.value.isPlaying
+                          ? _playerBuilder.player.controller.pause()
+                          : _playerBuilder.player.controller.play();
+                    },
+                    child: Text("Play/Pause"),
                   ),
                   const SizedBox(
                     height: 20,
                   ),
                   Center(
                     child: Image.network(
-                      _metadata.coverUrl,
+                      _playerBuilder.player.controller.metadata.videoId == ""
+                          ? "https://placehold.co/400/transparent/transparent/png"
+                          : "https://yttf.zeitvertreib.vip/?url=https://music.youtube.com/watch?v=${_playerBuilder.player.controller.metadata.videoId}",
+                    ),
+                  ),
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  Center(
+                    child: CupertinoSlider(
+                      value: getProgressAbsolute(),
+                      onChanged: (value) {
+                        seekToFromSliderValue(value);
+                      },
                     ),
                   ),
                 ],
@@ -115,5 +174,20 @@ class _RaveState extends State<Rave> {
         ],
       ),
     );
+  }
+
+  void seekToFromSliderValue(double value) {
+    _playerBuilder.player.controller.seekTo(Duration(
+        milliseconds: (value *
+                _playerBuilder
+                    .player.controller.metadata.duration.inMilliseconds)
+            .toInt()));
+  }
+
+  double getProgressAbsolute() {
+    return _playerBuilder.player.controller.value.position.inMilliseconds == 0
+        ? 0
+        : _playerBuilder.player.controller.value.position.inMilliseconds /
+            _playerBuilder.player.controller.metadata.duration.inMilliseconds;
   }
 }
