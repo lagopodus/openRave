@@ -26,6 +26,7 @@ class _HomeState extends State<Home> {
     return CupertinoPageScaffold(
       navigationBar: const CupertinoNavigationBar(
         middle: Text('OpenRave'),
+        automaticallyImplyLeading: false,
       ),
       child: Center(
         child: Column(
