@@ -16,7 +16,7 @@ class _RaveState extends State<Rave> {
   final String roomCode;
   _RaveState({required this.roomCode});
 
-  static String myVideoId = "cQjW6OOpo4g";
+  static String myVideoId = "itrXvuMArYs";
 
   final YoutubePlayerBuilder _playerBuilder = YoutubePlayerBuilder(
     builder: (p0, p1) => p1,
@@ -185,9 +185,15 @@ class _RaveState extends State<Rave> {
   }
 
   double getProgressAbsolute() {
-    return _playerBuilder.player.controller.value.position.inMilliseconds == 0
-        ? 0
-        : _playerBuilder.player.controller.value.position.inMilliseconds /
+    if (_playerBuilder.player.controller.value.position.inMilliseconds == 0) {
+      return 0;
+    }
+    double absolute =
+        _playerBuilder.player.controller.value.position.inMilliseconds /
             _playerBuilder.player.controller.metadata.duration.inMilliseconds;
+    if (absolute <= 1.0) {
+      return absolute;
+    }
+    return 1.0;
   }
 }
