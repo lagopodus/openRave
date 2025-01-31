@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:audio_service/audio_service.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:youtube_explode_dart/youtube_explode_dart.dart';
@@ -11,10 +13,12 @@ class RaveAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
       print("1");
       var manifest = await _yt.videos.streamsClient.getManifest(videoId);
       print("2");
-      var audioStream = manifest.audioOnly.withHighestBitrate();
+      var audioStream = Platform.isIOS
+          ? manifest.muxed.withHighestBitrate()
+          : manifest.audioOnly.withHighestBitrate();
       print("3");
       String audioUrl = audioStream.url.toString();
-      print("4 " + audioUrl);
+      print("4 $audioUrl");
       await _audioPlayer.setUrl(audioUrl);
       print("5");
       _audioPlayer.play();
