@@ -1,5 +1,7 @@
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'audio_handler.dart';
 
 class MiniRave extends StatefulWidget {
@@ -13,6 +15,7 @@ class MiniRave extends StatefulWidget {
 
 class _MiniRaveState extends State<MiniRave> {
   late final RaveAudioHandler _audioHandler;
+  bool audioHandlerInitialized = false;
 
   @override
   void initState() {
@@ -29,7 +32,14 @@ class _MiniRaveState extends State<MiniRave> {
       ),
     );
 
-    _audioHandler.loadAndPlay("itrXvuMArYs"); // Replace with dynamic video ID
+    _audioHandler.addListener(() {
+      if (mounted) {
+        setState(() {}); // Rebuild when Metadata updates
+      }
+    });
+
+    _audioHandler.loadAndPlay("J_1lnqs0odU"); // Replace with dynamic video ID
+    audioHandlerInitialized = true;
   }
 
   @override
@@ -42,16 +52,163 @@ class _MiniRaveState extends State<MiniRave> {
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
       navigationBar: CupertinoNavigationBar(
-        middle: Text('Room: ${widget.roomCode}'),
-      ),
-      child: Center(
-        child: CupertinoButton.filled(
-          onPressed: () {
-            _audioHandler.play();
-          },
-          child: Text("Play Audio"),
+        middle: Center(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              SelectableText('Room: ${widget.roomCode}'),
+              const SizedBox(width: 10),
+              IconButton(
+                onPressed: () async {
+                  await Clipboard.setData(ClipboardData(text: widget.roomCode));
+                  // copied successfully
+                },
+                icon: Icon(
+                  Icons.copy,
+                  color: Colors.blueAccent,
+                  size: 24.0,
+                  semanticLabel: 'Copy the room code.',
+                ),
+              ),
+            ],
+          ),
         ),
       ),
+      child: Stack(
+        children: [
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  Center(
+                    child: Text(
+                      widget.roomCode,
+                      style: TextStyle(
+                        fontSize: 24,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                  const SizedBox(
+                    height: 10,
+                  ),
+                  Center(
+                      child: Text.rich(
+                    TextSpan(
+                      style: TextStyle(fontSize: 18),
+                      children: [
+                        TextSpan(text: "Artist: "),
+                        TextSpan(text: getArtistName()),
+                        TextSpan(text: "\n"),
+                        TextSpan(text: "Song: "),
+                        TextSpan(text: getSongName()),
+                        TextSpan(text: "\n"),
+                        TextSpan(text: "Is Playing: "),
+                        TextSpan(text: getIsPlaying()),
+                        TextSpan(text: "\n"),
+                        TextSpan(text: "Progress: "),
+                        TextSpan(
+                          text: getProgressAsString(),
+                        ),
+                        TextSpan(text: "\n"),
+                        TextSpan(text: "Duration: "),
+                        TextSpan(
+                          text: getDurationAsString(),
+                        ),
+                      ],
+                    ),
+                  )),
+                  CupertinoButton.filled(
+                    onPressed: () {
+                      if (_audioHandler.isPlaying) {
+                        _audioHandler.pause();
+                      } else {
+                        _audioHandler.play();
+                      }
+                    },
+                    child: Text("Play/Pause"),
+                  ),
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  Center(
+                    child: Image.network(
+                      getCoverImageUrl(),
+                    ),
+                  ),
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  Center(
+                    child: CupertinoSlider(
+                      value: getProgressAbsolute(),
+                      onChanged: (value) {
+                        seekToFromSliderValue(value);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
     );
+  }
+
+  String getCoverImageUrl() {
+    if (!audioHandlerInitialized) {
+      return "https://placehold.co/400/transparent/transparent/png";
+    }
+    return _audioHandler.videoId == ""
+        ? "https://placehold.co/400/transparent/transparent/png"
+        : "https://yttf.zeitvertreib.vip/?url=https://music.youtube.com/watch?v=${_audioHandler.videoId}";
+  }
+
+  String getDurationAsString() {
+    if (!audioHandlerInitialized) return "Loading...";
+    return _audioHandler.duration.toString();
+  }
+
+  String getProgressAsString() {
+    if (!audioHandlerInitialized) return "Loading...";
+    return _audioHandler.progress.toString();
+  }
+
+  String getIsPlaying() {
+    if (!audioHandlerInitialized) return "Loading...";
+
+    return _audioHandler.isPlaying ? "Yes" : "No";
+  }
+
+  String getSongName() {
+    if (!audioHandlerInitialized) return "Loading...";
+
+    return _audioHandler.songTitle == ""
+        ? "Loading..."
+        : _audioHandler.songTitle;
+  }
+
+  String getArtistName() {
+    if (!audioHandlerInitialized) return "Loading...";
+    // Check if audio player has been initialized yet
+    return _audioHandler.artistName == ""
+        ? "Loading..."
+        : _audioHandler.artistName;
+  }
+
+  void seekToFromSliderValue(double value) {
+    _audioHandler.seek(Duration(
+        milliseconds: (value * _audioHandler.duration).round().toInt()));
+  }
+
+  double getProgressAbsolute() {
+    if (!audioHandlerInitialized) return 0;
+    return _audioHandler.duration == 0
+        ? 0
+        : _audioHandler.progress / _audioHandler.duration;
   }
 }
