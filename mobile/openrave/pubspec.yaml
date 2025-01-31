@@ -40,6 +40,8 @@ dependencies:
   audio_service: ^0.18.16
   just_audio: ^0.9.44
   youtube_explode_dart: ^2.3.6
+  audioplayers: ^6.1.1
+  audio_session: ^0.1.24
 
 dev_dependencies:
   flutter_test:

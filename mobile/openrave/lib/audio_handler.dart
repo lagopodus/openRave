@@ -8,9 +8,15 @@ class RaveAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
 
   Future<void> loadAndPlay(String videoId) async {
     try {
+      print("1");
       var manifest = await _yt.videos.streamsClient.getManifest(videoId);
+      print("2");
       var audioStream = manifest.audioOnly.withHighestBitrate();
-      await _audioPlayer.setUrl(audioStream.url.toString());
+      print("3");
+      String audioUrl = audioStream.url.toString();
+      print("4 " + audioUrl);
+      await _audioPlayer.setUrl(audioUrl);
+      print("5");
       _audioPlayer.play();
     } catch (e) {
       print("Error loading YouTube audio: $e");
