@@ -33,9 +33,7 @@ class _MiniRaveState extends State<MiniRave> {
     );
 
     _audioHandler.addListener(() {
-      if (mounted) {
-        setState(() {}); // Rebuild when Metadata updates
-      }
+      setState(() {}); // Rebuild when Metadata updates
     });
 
     _audioHandler.loadAndPlay("J_1lnqs0odU"); // Replace with dynamic video ID
@@ -110,9 +108,7 @@ class _MiniRaveState extends State<MiniRave> {
                         TextSpan(text: getIsPlaying()),
                         TextSpan(text: "\n"),
                         TextSpan(text: "Progress: "),
-                        TextSpan(
-                          text: getProgressAsString(),
-                        ),
+                        TextSpan(text: getProgressAsString()),
                         TextSpan(text: "\n"),
                         TextSpan(text: "Duration: "),
                         TextSpan(
@@ -144,7 +140,7 @@ class _MiniRaveState extends State<MiniRave> {
                   ),
                   Center(
                     child: CupertinoSlider(
-                      value: getProgressAbsolute(),
+                      value: getAbsoluteProgress(),
                       onChanged: (value) {
                         seekToFromSliderValue(value);
                       },
@@ -159,23 +155,31 @@ class _MiniRaveState extends State<MiniRave> {
     );
   }
 
+  double getAbsoluteProgress() {
+    if (!audioHandlerInitialized) {
+      return 0.0;
+    }
+    return _audioHandler.position.inMilliseconds /
+        _audioHandler.video.duration!.inMilliseconds;
+  }
+
   String getCoverImageUrl() {
     if (!audioHandlerInitialized) {
       return "https://placehold.co/400/transparent/transparent/png";
     }
-    return _audioHandler.videoId == ""
-        ? "https://placehold.co/400/transparent/transparent/png"
-        : "https://yttf.zeitvertreib.vip/?url=https://music.youtube.com/watch?v=${_audioHandler.videoId}";
+    return "https://yttf.zeitvertreib.vip/?url=${_audioHandler.video.url}";
   }
 
   String getDurationAsString() {
-    if (!audioHandlerInitialized) return "Loading...";
-    return _audioHandler.duration.toString();
+    if (!audioHandlerInitialized || _audioHandler.video.duration == null) {
+      return "Loading...";
+    }
+    return _audioHandler.video.duration.toString();
   }
 
   String getProgressAsString() {
     if (!audioHandlerInitialized) return "Loading...";
-    return _audioHandler.progress.toString();
+    return _audioHandler.position.toString();
   }
 
   String getIsPlaying() {
@@ -187,28 +191,18 @@ class _MiniRaveState extends State<MiniRave> {
   String getSongName() {
     if (!audioHandlerInitialized) return "Loading...";
 
-    return _audioHandler.songTitle == ""
-        ? "Loading..."
-        : _audioHandler.songTitle;
+    return _audioHandler.video.title;
   }
 
   String getArtistName() {
     if (!audioHandlerInitialized) return "Loading...";
     // Check if audio player has been initialized yet
-    return _audioHandler.artistName == ""
-        ? "Loading..."
-        : _audioHandler.artistName;
+    return _audioHandler.video.author;
   }
 
   void seekToFromSliderValue(double value) {
     _audioHandler.seek(Duration(
-        milliseconds: (value * _audioHandler.duration).round().toInt()));
-  }
-
-  double getProgressAbsolute() {
-    if (!audioHandlerInitialized) return 0;
-    return _audioHandler.duration == 0
-        ? 0
-        : _audioHandler.progress / _audioHandler.duration;
+        milliseconds:
+            (value * _audioHandler.video.duration!.inMilliseconds).toInt()));
   }
 }
