@@ -1,6 +1,5 @@
 import 'package:flutter/cupertino.dart';
 import 'rave.dart';
-import 'rave.dart';
 import 'dart:math';
 
 class Home extends StatefulWidget {
