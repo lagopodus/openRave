@@ -45,8 +45,9 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     super.didChangePlatformBrightness();
   }
 
+  //Removed light theme for now. Not really happy with how it changes the feel of the app.
   CupertinoThemeData get _lightTheme => CupertinoThemeData(
-        brightness: Brightness.light, /* light theme settings */
+        brightness: Brightness.dark, /* light theme settings */
       );
 
   CupertinoThemeData get _darkTheme => CupertinoThemeData(
