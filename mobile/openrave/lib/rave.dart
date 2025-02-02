@@ -37,7 +37,7 @@ class _RaveState extends State<Rave> {
       setState(() {}); // Rebuild when Metadata updates
     });
 
-    _audioHandler.loadAndPlay("zPV7XhU2Obo"); // Replace with dynamic video ID
+    _audioHandler.loadAndPlay("cQjW6OOpo4g"); // Replace with dynamic video ID
     audioHandlerInitialized = true;
   }
 
@@ -82,59 +82,11 @@ class _RaveState extends State<Rave> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
-                  Center(
-                    child: Text(
-                      widget.roomCode,
-                      style: TextStyle(
-                        fontSize: 24,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                  const SizedBox(
-                    height: 10,
-                  ),
-                  Center(
-                      child: Text.rich(
-                    TextSpan(
-                      style: TextStyle(fontSize: 18),
-                      children: [
-                        TextSpan(text: "Artist: "),
-                        TextSpan(text: getArtistName()),
-                        TextSpan(text: "\n"),
-                        TextSpan(text: "Song: "),
-                        TextSpan(text: getSongName()),
-                        TextSpan(text: "\n"),
-                        TextSpan(text: "Is Playing: "),
-                        TextSpan(text: getIsPlaying()),
-                        TextSpan(text: "\n"),
-                        TextSpan(text: "Progress: "),
-                        TextSpan(text: getProgressAsString()),
-                        TextSpan(text: "\n"),
-                        TextSpan(text: "Duration: "),
-                        TextSpan(
-                          text: getDurationAsString(),
-                        ),
-                      ],
-                    ),
-                  )),
-                  CupertinoButton.filled(
-                    onPressed: () {
-                      if (_audioHandler.isPlaying) {
-                        _audioHandler.pause();
-                      } else {
-                        _audioHandler.play();
-                      }
-                    },
-                    child: Text("Play/Pause"),
-                  ),
-                  const SizedBox(
-                    height: 20,
-                  ),
                   SizedBox(
                     width: MediaQuery.sizeOf(context).width * 0.75,
                     height: MediaQuery.sizeOf(context).width * 0.75,
                     child: Image.network(
+                      fit: BoxFit.cover,
                       getCoverImageUrl(),
                     ),
                   ),
