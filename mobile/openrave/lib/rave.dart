@@ -37,7 +37,7 @@ class _RaveState extends State<Rave> {
       setState(() {}); // Rebuild when Metadata updates
     });
 
-    _audioHandler.loadAndPlay("cQjW6OOpo4g"); // Replace with dynamic video ID
+    _audioHandler.loadAndPlay("FU4eDOcmYWg"); // Replace with dynamic video ID
     audioHandlerInitialized = true;
   }
 
@@ -269,8 +269,15 @@ class _RaveState extends State<Rave> {
     if (!audioHandlerInitialized) {
       return 0.0;
     }
-    return _audioHandler.position.inMilliseconds /
+    double progress = _audioHandler.position.inMilliseconds /
         _audioHandler.video.duration!.inMilliseconds;
+
+    if (progress > 1.0) {
+      progress = 1.0;
+    } else if (progress < 0.0) {
+      progress = 0.0;
+    }
+    return progress;
   }
 
   String getCoverImageUrl() {
