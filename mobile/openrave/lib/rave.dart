@@ -37,7 +37,7 @@ class _RaveState extends State<Rave> {
       setState(() {}); // Rebuild when Metadata updates
     });
 
-    _audioHandler.loadAndPlay("FU4eDOcmYWg"); // Replace with dynamic video ID
+    _audioHandler.loadAndPlay("uxyM7vhU0uU"); // Replace with dynamic video ID
     audioHandlerInitialized = true;
   }
 
