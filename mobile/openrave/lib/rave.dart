@@ -239,8 +239,7 @@ class _RaveState extends State<Rave> {
                       children: [
                         CupertinoButton(
                           onPressed: () {
-                            _audioHandler.seek(
-                                _audioHandler.position - Duration(seconds: 10));
+                            seekBackForXSeconds(10);
                           },
                           child: Icon(
                             CupertinoIcons.backward_fill,
@@ -265,8 +264,7 @@ class _RaveState extends State<Rave> {
                         ),
                         CupertinoButton(
                           onPressed: () {
-                            _audioHandler.seek(
-                                _audioHandler.position + Duration(seconds: 10));
+                            seekForwardForXSeconds(10);
                           },
                           child: Icon(
                             CupertinoIcons.forward_fill,
@@ -284,6 +282,26 @@ class _RaveState extends State<Rave> {
         ],
       ),
     );
+  }
+
+  void seekBackForXSeconds(int seconds) {
+    if (!audioHandlerInitialized) return;
+    if (_audioHandler.position.inSeconds - seconds < 0) {
+      _audioHandler.seek(Duration(seconds: 0));
+      return;
+    }
+    _audioHandler.seek(_audioHandler.position - Duration(seconds: seconds));
+  }
+
+  void seekForwardForXSeconds(int seconds) {
+    if (!audioHandlerInitialized) return;
+    if (_audioHandler.position.inSeconds + seconds + 1 >
+        _audioHandler.video.duration!.inSeconds) {
+      _audioHandler
+          .seek(Duration(seconds: _audioHandler.video.duration!.inSeconds));
+      return;
+    }
+    _audioHandler.seek(_audioHandler.position + Duration(seconds: seconds));
   }
 
   IconData getPauseButtonState() {
