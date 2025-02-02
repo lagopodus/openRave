@@ -26,6 +26,7 @@ class RaveAudioHandler extends BaseAudioHandler
   }
 
   Future<void> loadAndPlay(String videoId) async {
+    _notifyAudioHandlerAboutPlaybackEvents();
     try {
       refreshMetadata(videoId);
       var link = await getLink(videoId);
@@ -67,5 +68,35 @@ class RaveAudioHandler extends BaseAudioHandler
     } else {
       return false;
     }
+  }
+
+  void _notifyAudioHandlerAboutPlaybackEvents() {
+    _audioPlayer.playbackEventStream.listen((PlaybackEvent event) {
+      final playing = _audioPlayer.playing;
+      playbackState.add(playbackState.value.copyWith(
+        controls: [
+          MediaControl.skipToPrevious,
+          if (playing) MediaControl.pause else MediaControl.play,
+          MediaControl.stop,
+          MediaControl.skipToNext,
+        ],
+        systemActions: const {
+          MediaAction.seek,
+        },
+        androidCompactActionIndices: const [0, 1, 3],
+        processingState: const {
+          ProcessingState.idle: AudioProcessingState.idle,
+          ProcessingState.loading: AudioProcessingState.loading,
+          ProcessingState.buffering: AudioProcessingState.buffering,
+          ProcessingState.ready: AudioProcessingState.ready,
+          ProcessingState.completed: AudioProcessingState.completed,
+        }[_audioPlayer.processingState]!,
+        playing: playing,
+        updatePosition: _audioPlayer.position,
+        bufferedPosition: _audioPlayer.bufferedPosition,
+        speed: _audioPlayer.speed,
+        queueIndex: event.currentIndex,
+      ));
+    });
   }
 }

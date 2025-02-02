@@ -2,7 +2,7 @@ import 'package:audio_service/audio_service.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'audio_handler.dart';
+import 'services/audio_handler.dart';
 import 'package:text_scroll/text_scroll.dart';
 
 class Rave extends StatefulWidget {
