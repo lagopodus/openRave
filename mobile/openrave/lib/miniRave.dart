@@ -36,7 +36,7 @@ class _MiniRaveState extends State<MiniRave> {
       setState(() {}); // Rebuild when Metadata updates
     });
 
-    _audioHandler.loadAndPlay("J_1lnqs0odU"); // Replace with dynamic video ID
+    _audioHandler.loadAndPlay("tVGH-g6OQhg"); // Replace with dynamic video ID
     audioHandlerInitialized = true;
   }
 
@@ -130,9 +130,39 @@ class _MiniRaveState extends State<MiniRave> {
                   const SizedBox(
                     height: 20,
                   ),
-                  Center(
-                    child: Image.network(
-                      getCoverImageUrl(),
+                  Container(
+                    width: MediaQuery.sizeOf(context).width * 0.75,
+                    height: MediaQuery.sizeOf(context).width * 0.75,
+                    child: Stack(
+                      children: [
+                        Align(
+                          alignment: Alignment.center,
+                          child: Flex(
+                            direction: Axis.horizontal,
+                            children: [
+                              Image.network(
+                                getCoverImageUrl(),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Align(
+                          alignment: Alignment.center,
+                          child: IconButton(
+                            onPressed: () {
+                              if (_audioHandler.isPlaying) {
+                                _audioHandler.pause();
+                              } else {
+                                _audioHandler.play();
+                              }
+                            },
+                            icon: Icon(
+                              getPauseButtonState(),
+                              size: 50,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(
@@ -155,6 +185,15 @@ class _MiniRaveState extends State<MiniRave> {
     );
   }
 
+  IconData getPauseButtonState() {
+    if (!audioHandlerInitialized) {
+      return CupertinoIcons.wifi_exclamationmark;
+    }
+    return _audioHandler.isPlaying
+        ? CupertinoIcons.pause_fill
+        : CupertinoIcons.play_fill;
+  }
+
   double getAbsoluteProgress() {
     if (!audioHandlerInitialized) {
       return 0.0;
@@ -165,7 +204,7 @@ class _MiniRaveState extends State<MiniRave> {
 
   String getCoverImageUrl() {
     if (!audioHandlerInitialized) {
-      return "https://placehold.co/400/transparent/transparent/png";
+      return "https://placehold.co/1/transparent/transparent/png";
     }
     return "https://yttf.zeitvertreib.vip/?url=${_audioHandler.video.url}";
   }
@@ -201,6 +240,7 @@ class _MiniRaveState extends State<MiniRave> {
   }
 
   void seekToFromSliderValue(double value) {
+    _audioHandler.pause();
     _audioHandler.seek(Duration(
         milliseconds:
             (value * _audioHandler.video.duration!.inMilliseconds).toInt()));
