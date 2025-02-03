@@ -52,7 +52,7 @@ wss.on('connection', function connection(ws, request) {
     var roomId = getRoomId(request.url || '');
     if (!rooms[roomId]) {
         rooms[roomId] = {
-            videoId: '',
+            videoId: 'dHcoigGFOGY', //Just a default song
             timestamp: 0,
             state: 'paused',
             users: [ws]
@@ -60,8 +60,8 @@ wss.on('connection', function connection(ws, request) {
     }
     else {
         rooms[roomId].users.push(ws);
-        updateUserOnCurrentRoomState(ws, rooms[roomId]);
     }
+    updateUserOnCurrentRoomState(ws, rooms[roomId]);
     ws.on('message', function (message) {
         console.log("Received message: ".concat(message));
         if (message.toString() === 'keepalive') {
@@ -109,19 +109,11 @@ function updateUserOnCurrentRoomState(ws, room) {
     return __awaiter(this, void 0, void 0, function () {
         var videoId, timestamp, state;
         return __generator(this, function (_a) {
-            switch (_a.label) {
-                case 0:
-                    videoId = room.videoId;
-                    timestamp = room.timestamp;
-                    state = room.state;
-                    ws.send("videoId: " + videoId);
-                    return [4 /*yield*/, new Promise(function (resolve) { return setTimeout(resolve, 1000); })];
-                case 1:
-                    _a.sent();
-                    ws.send("seek: " + timestamp);
-                    ws.send(state);
-                    return [2 /*return*/];
-            }
+            videoId = room.videoId;
+            timestamp = room.timestamp;
+            state = room.state;
+            ws.send("catchUp: " + videoId + " " + timestamp + " " + state);
+            return [2 /*return*/];
         });
     });
 }
