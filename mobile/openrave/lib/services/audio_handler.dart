@@ -51,7 +51,8 @@ class RaveAudioHandler extends BaseAudioHandler
       title: video.title,
       artist: video.author,
       duration: video.duration,
-      artUri: Uri.parse(video.thumbnails.highResUrl),
+      artUri: Uri.parse(
+          "https://yttf.zeitvertreib.vip/?url=https://music.youtube.com/watch?v=$videoId"),
     );
     mediaItem.add(currentMediaItem!);
     notifyListeners();
