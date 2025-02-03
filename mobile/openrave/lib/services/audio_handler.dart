@@ -28,7 +28,18 @@ class RaveAudioHandler extends BaseAudioHandler
 
   Future<void> catchUp(String videoId, Duration time, String state) async {
     final session = await AudioSession.instance;
-    await session.configure(AudioSessionConfiguration.music());
+    final customSessionConfig = AudioSessionConfiguration(
+      avAudioSessionCategory: AVAudioSessionCategory.playback,
+      avAudioSessionCategoryOptions:
+          AVAudioSessionCategoryOptions.mixWithOthers,
+      avAudioSessionMode: AVAudioSessionMode.defaultMode,
+      androidAudioAttributes: const AndroidAudioAttributes(
+        contentType: AndroidAudioContentType.music,
+        usage: AndroidAudioUsage.media,
+      ),
+      androidAudioFocusGainType: AndroidAudioFocusGainType.gain,
+    );
+    await session.configure(customSessionConfig);
     await session.setActive(true);
 
     _audioPlayer.positionStream.listen((event) {
