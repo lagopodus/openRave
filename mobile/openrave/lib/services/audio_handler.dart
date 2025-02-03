@@ -3,6 +3,7 @@ import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:youtube_explode_dart/youtube_explode_dart.dart';
+import 'package:audio_session/audio_session.dart';
 
 class RaveAudioHandler extends BaseAudioHandler
     with QueueHandler, SeekHandler, ChangeNotifier {
@@ -26,6 +27,10 @@ class RaveAudioHandler extends BaseAudioHandler
   }
 
   Future<void> catchUp(String videoId, Duration time, String state) async {
+    final session = await AudioSession.instance;
+    await session.configure(AudioSessionConfiguration.music());
+    await session.setActive(true);
+
     _audioPlayer.positionStream.listen((event) {
       position = event;
       notifyListeners();

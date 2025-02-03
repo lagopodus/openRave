@@ -41,11 +41,10 @@ class _RaveState extends State<Rave> {
     await _initWebsocket();
 
     //await _audioHandler.loadAndPlay("tVGH-g6OQhg"); // Replace with dynamic video ID
-    audioHandlerInitialized = true;
   }
 
   Future<void> _initWebsocket() async {
-    widget._roomController.onEvent.listen((event) {
+    widget._roomController.onEvent.listen((event) async {
       if (event.startsWith("catchUp: ")) {
         //"catchUp: uMkBuxEDkyg 104.7096185064935 playing"
         List<String> parts = event.split(' ');
@@ -57,6 +56,9 @@ class _RaveState extends State<Rave> {
             parts[3]; // Assuming the state (e.g., "playing") is at index 3
         _audioHandler.catchUp(
             videoId, Duration(milliseconds: (seekTime * 1000).round()), state);
+
+        await _audioHandler.refreshMetadata(videoId);
+        audioHandlerInitialized = true;
       } else if (event.startsWith("videoId: ")) {
         String videoId = event.substring(9);
         _audioHandler.loadAndPlay(videoId);
