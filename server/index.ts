@@ -32,8 +32,9 @@ wss.on('connection', function connection(ws: WebSocket, request) {
     };
   } else {
     rooms[roomId].users.push(ws);
-    updateUserOnCurrentRoomState(ws, rooms[roomId]);
+    
   }
+  updateUserOnCurrentRoomState(ws, rooms[roomId]);
 
 
 
