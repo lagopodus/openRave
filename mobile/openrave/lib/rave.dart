@@ -3,13 +3,14 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'services/audio_handler.dart';
+import 'services/backend_handler.dart';
 import 'package:text_scroll/text_scroll.dart';
 
 class Rave extends StatefulWidget {
-  const Rave({super.key, required this.roomCode});
+  Rave({super.key, required this.roomCode});
 
   final String roomCode;
-
+  final RoomController _roomController = RoomController();
   @override
   State<Rave> createState() => _RaveState();
 }
@@ -37,9 +38,39 @@ class _RaveState extends State<Rave> {
       setState(() {}); // Rebuild when Metadata updates
     });
 
-    await _audioHandler
-        .loadAndPlay("uxyM7vhU0uU"); // Replace with dynamic video ID
+    await _initWebsocket();
+
+    //await _audioHandler.loadAndPlay("tVGH-g6OQhg"); // Replace with dynamic video ID
     audioHandlerInitialized = true;
+  }
+
+  Future<void> _initWebsocket() async {
+    widget._roomController.onEvent.listen((event) {
+      if (event.startsWith("catchUp: ")) {
+        //"catchUp: uMkBuxEDkyg 104.7096185064935 playing"
+        List<String> parts = event.split(' ');
+
+        String videoId = parts[1]; // Assuming videoId is at index 1
+        double seekTime =
+            double.parse(parts[2]); // Assuming seekTime is at index 2
+        String state =
+            parts[3]; // Assuming the state (e.g., "playing") is at index 3
+        _audioHandler.catchUp(
+            videoId, Duration(milliseconds: (seekTime * 1000).round()), state);
+      } else if (event.startsWith("videoId: ")) {
+        String videoId = event.substring(9);
+        _audioHandler.loadAndPlay(videoId);
+      } else if (event.startsWith("seek: ")) {
+        double seekTime = double.parse(event.substring(6));
+        _audioHandler.seek(Duration(milliseconds: (seekTime * 1000).round()));
+      } else if (event == "playing") {
+        _audioHandler.play();
+      } else if (event == "paused") {
+        _audioHandler.pause();
+      }
+    });
+
+    widget._roomController.initialize(widget.roomCode);
   }
 
   @override
@@ -155,6 +186,9 @@ class _RaveState extends State<Rave> {
                             onChanged: (value) {
                               seekToFromSliderValue(value);
                             },
+                            onChangeEnd: (value) {
+                              seekToFromSliderValue(value);
+                            },
                           ),
                         ),
                       ),
@@ -192,7 +226,8 @@ class _RaveState extends State<Rave> {
                       children: [
                         CupertinoButton(
                           onPressed: () {
-                            seekBackForXSeconds(10);
+                            //seekBackForXSeconds(10);
+                            seekBackToBeginning();
                           },
                           child: Icon(
                             CupertinoIcons.backward_fill,
@@ -217,7 +252,8 @@ class _RaveState extends State<Rave> {
                         ),
                         CupertinoButton(
                           onPressed: () {
-                            seekForwardForXSeconds(10);
+                            //seekForwardForXSeconds(10);
+                            seekToEnd();
                           },
                           child: Icon(
                             CupertinoIcons.forward_fill,
@@ -235,6 +271,16 @@ class _RaveState extends State<Rave> {
         ],
       ),
     );
+  }
+
+  void seekBackToBeginning() {
+    if (!audioHandlerInitialized) return;
+    _audioHandler.skipToPrevious();
+  }
+
+  void seekToEnd() {
+    if (!audioHandlerInitialized) return;
+    _audioHandler.skipToNext();
   }
 
   void seekBackForXSeconds(int seconds) {
@@ -261,6 +307,10 @@ class _RaveState extends State<Rave> {
     if (!audioHandlerInitialized) {
       return CupertinoIcons.wifi_exclamationmark;
     }
+    if (_audioHandler.playbackState.value.processingState ==
+        AudioProcessingState.completed) {
+      return CupertinoIcons.play_fill;
+    }
     return _audioHandler.isPlaying
         ? CupertinoIcons.pause_fill
         : CupertinoIcons.play_fill;
@@ -277,6 +327,10 @@ class _RaveState extends State<Rave> {
       progress = 1.0;
     } else if (progress < 0.0) {
       progress = 0.0;
+    }
+    if (_audioHandler.playbackState.value.processingState ==
+        AudioProcessingState.completed) {
+      progress = 1.0;
     }
     return progress;
   }
@@ -308,6 +362,10 @@ class _RaveState extends State<Rave> {
 
   String getProgressAsStringShort() {
     if (!audioHandlerInitialized) return "0:00";
+    if (_audioHandler.playbackState.value.processingState ==
+        AudioProcessingState.completed) {
+      return getDurationAsStringShort();
+    }
 
     return formattedTime(timeInSecond: _audioHandler.position.inSeconds);
   }

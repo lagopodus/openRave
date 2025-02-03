@@ -25,6 +25,17 @@ class RaveAudioHandler extends BaseAudioHandler
         : manifest.audioOnly.withHighestBitrate().url.toString();
   }
 
+  Future<void> catchUp(String videoId, Duration time, String state) async {
+    var link = await getLink(videoId);
+    await _audioPlayer.setUrl(link);
+    await _audioPlayer.seek(time); // Seek to the specific time first
+    if (state == "playing") {
+      _audioPlayer.play(); // Start playing after the seek
+    } else {
+      _audioPlayer.pause();
+    }
+  }
+
   Future<void> loadAndPlay(String videoId) async {
     _audioPlayer.positionStream.listen((event) {
       position = event;
@@ -78,6 +89,18 @@ class RaveAudioHandler extends BaseAudioHandler
     ));
   }
 
+  @override
+  Future<void> skipToPrevious() async {
+    //always restart the song instead of going back one song. I dont want that now!
+    await _audioPlayer.seek(Duration.zero);
+  }
+
+  @override
+  Future<void> skipToNext() async {
+    _audioPlayer.seek(_audioPlayer.duration!);
+    _audioPlayer.pause();
+  }
+
   bool get isPlaying => _audioPlayer.playing;
 
   void _notifyAudioHandlerAboutPlaybackEvents() {
@@ -87,14 +110,13 @@ class RaveAudioHandler extends BaseAudioHandler
         controls: [
           MediaControl.skipToPrevious,
           if (playing) MediaControl.pause else MediaControl.play,
-          MediaControl.stop,
           MediaControl.skipToNext,
         ],
         systemActions: const {
+          MediaAction.skipToPrevious,
           MediaAction.seek,
           MediaAction.play,
           MediaAction.pause,
-          MediaAction.stop,
         },
         androidCompactActionIndices: const [0, 1, 3],
         processingState: const {
