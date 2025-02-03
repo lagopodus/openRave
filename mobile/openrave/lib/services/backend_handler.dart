@@ -75,10 +75,12 @@ class RoomController {
       _eventController.add(message);
     } else if (message == 'paused') {
       _eventController.add(message);
-    } else if (message == 'catchUp: ') {
+    } else if (message.startsWith('catchUp: ')) {
       //"catchUp: uMkBuxEDkyg 104.7096185064935"
       _eventController.add(message);
+      print('received a catchUp message');
     }
+    print('Received message: $message');
   }
 
   // Keepalive function to send periodic "keepalive" messages
