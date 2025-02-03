@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
@@ -12,6 +11,7 @@ class RaveAudioHandler extends BaseAudioHandler
 
   late Video video;
   Duration position = Duration.zero;
+  MediaItem? currentMediaItem;
 
   Future<String> getLink(String id) async {
     var manifest = await _yt.videos.streamsClient.getManifest(id, ytClients: [
@@ -26,23 +26,34 @@ class RaveAudioHandler extends BaseAudioHandler
   }
 
   Future<void> loadAndPlay(String videoId) async {
-    _notifyAudioHandlerAboutPlaybackEvents();
-    try {
-      refreshMetadata(videoId);
-      var link = await getLink(videoId);
-      await _audioPlayer.setUrl(link);
-      play();
-    } catch (e) {
-      print(e);
-    }
-  }
-
-  void refreshMetadata(String videoId) async {
-    video = await _yt.videos.get("https://music.youtube.com/watch?v=$videoId");
     _audioPlayer.positionStream.listen((event) {
       position = event;
       notifyListeners();
     });
+
+    _notifyAudioHandlerAboutPlaybackEvents();
+    _listenToCurrentPosition();
+    try {
+      await refreshMetadata(videoId);
+      var link = await getLink(videoId);
+      await _audioPlayer.setUrl(link);
+      play();
+    } catch (e) {
+      print("Error loading video: $e");
+    }
+  }
+
+  Future<void> refreshMetadata(String videoId) async {
+    video = await _yt.videos.get("https://music.youtube.com/watch?v=$videoId");
+    currentMediaItem = MediaItem(
+      id: videoId,
+      album: "YouTube Music",
+      title: video.title,
+      artist: video.author,
+      duration: video.duration,
+      artUri: Uri.parse(video.thumbnails.highResUrl),
+    );
+    mediaItem.add(currentMediaItem!);
     notifyListeners();
   }
 
@@ -58,17 +69,15 @@ class RaveAudioHandler extends BaseAudioHandler
   @override
   Future<void> stop() async {
     await _audioPlayer.stop();
-    await _audioPlayer.dispose();
+    _audioPlayer.dispose();
     _yt.close();
+    playbackState.add(playbackState.value.copyWith(
+      playing: false,
+      processingState: AudioProcessingState.idle,
+    ));
   }
 
-  bool get isPlaying {
-    if (_audioPlayer.playerState.playing) {
-      return true;
-    } else {
-      return false;
-    }
-  }
+  bool get isPlaying => _audioPlayer.playing;
 
   void _notifyAudioHandlerAboutPlaybackEvents() {
     _audioPlayer.playbackEventStream.listen((PlaybackEvent event) {
@@ -82,6 +91,9 @@ class RaveAudioHandler extends BaseAudioHandler
         ],
         systemActions: const {
           MediaAction.seek,
+          MediaAction.play,
+          MediaAction.pause,
+          MediaAction.stop,
         },
         androidCompactActionIndices: const [0, 1, 3],
         processingState: const {
@@ -97,6 +109,12 @@ class RaveAudioHandler extends BaseAudioHandler
         speed: _audioPlayer.speed,
         queueIndex: event.currentIndex,
       ));
+    });
+  }
+
+  void _listenToCurrentPosition() {
+    _audioPlayer.positionStream.listen((position) {
+      playbackState.add(playbackState.value.copyWith(updatePosition: position));
     });
   }
 }
