@@ -7,7 +7,14 @@ import 'package:audio_session/audio_session.dart';
 
 class RaveAudioHandler extends BaseAudioHandler
     with QueueHandler, SeekHandler, ChangeNotifier {
-  final AudioPlayer _audioPlayer = AudioPlayer();
+  final AudioPlayer _audioPlayer = AudioPlayer(
+    handleInterruptions: true,
+    audioLoadConfiguration: AudioLoadConfiguration(
+      darwinLoadControl: DarwinLoadControl(
+        preferredForwardBufferDuration: Duration(seconds: 300),
+      ),
+    ),
+  );
   final YoutubeExplode _yt = YoutubeExplode();
 
   late Video video;
@@ -46,30 +53,26 @@ class RaveAudioHandler extends BaseAudioHandler
         switch (event.type) {
           case AudioInterruptionType.duck:
             // Another app started playing audio and we should duck.
-            print("Audio ducked");
             break;
           case AudioInterruptionType.pause:
+            if (predictedPlayingState) _audioPlayer.play();
             // Another app started playing audio and we should pause.
-            print("Audio paused");
             break;
           case AudioInterruptionType.unknown:
             // Another app started playing audio and we should pause.
-            print("Audio unkown plase");
+            if (predictedPlayingState) _audioPlayer.play();
             break;
         }
       } else {
         switch (event.type) {
           case AudioInterruptionType.duck:
             // The interruption ended and we should unduck.
-            print("Audio ducked over");
             break;
           case AudioInterruptionType.pause:
             // The interruption ended and we should resume.
-            print("Audio paused over");
             break;
           case AudioInterruptionType.unknown:
             // The interruption ended but we should not resume.
-            print("Audio unkown plase over");
             break;
         }
       }
@@ -120,10 +123,16 @@ class RaveAudioHandler extends BaseAudioHandler
   }
 
   @override
-  Future<void> play() => _audioPlayer.play();
+  Future<void> play() async {
+    _audioPlayer.play();
+    predictedPlayingState = true;
+  }
 
   @override
-  Future<void> pause() => _audioPlayer.pause();
+  Future<void> pause() async {
+    _audioPlayer.pause();
+    predictedPlayingState = false;
+  }
 
   @override
   Future<void> seek(Duration position) => _audioPlayer.seek(position);
@@ -151,6 +160,7 @@ class RaveAudioHandler extends BaseAudioHandler
     _audioPlayer.pause();
   }
 
+  bool predictedPlayingState = false;
   bool get isPlaying => _audioPlayer.playing;
 
   void _notifyAudioHandlerAboutPlaybackEvents() {
