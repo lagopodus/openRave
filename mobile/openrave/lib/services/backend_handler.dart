@@ -7,7 +7,6 @@ class RoomController {
   late String _roomCode;
   final StreamController<String> _eventController =
       StreamController.broadcast();
-  Timer? _keepAliveTimer;
 
   factory RoomController() {
     return _instance;
@@ -46,8 +45,8 @@ class RoomController {
   }
 
   // Send a seek command to the server with the desired timestamp
-  void seek(double timestamp) {
-    _sendMessage('seek: $timestamp');
+  void seek(double timestampInSeconds) {
+    _sendMessage('seek: $timestampInSeconds');
   }
 
   // Listen for specific events from the server
@@ -84,7 +83,7 @@ class RoomController {
 
   // Keepalive function to send periodic "keepalive" messages
   void _startKeepAlive() {
-    _keepAliveTimer = Timer.periodic(Duration(seconds: 15), (timer) {
+    Timer.periodic(Duration(seconds: 15), (timer) {
       _sendMessage('keepalive');
     });
   }

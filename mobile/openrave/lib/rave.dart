@@ -64,11 +64,12 @@ class _RaveState extends State<Rave> {
         _audioHandler.loadAndPlay(videoId);
       } else if (event.startsWith("seek: ")) {
         double seekTime = double.parse(event.substring(6));
-        _audioHandler.seek(Duration(milliseconds: (seekTime * 1000).round()));
+        _audioHandler
+            .seekNoNotify(Duration(milliseconds: (seekTime * 1000).round()));
       } else if (event == "playing") {
-        _audioHandler.play();
+        _audioHandler.playNoNotify();
       } else if (event == "paused") {
-        _audioHandler.pause();
+        _audioHandler.pauseNoNotify();
       }
     });
 
@@ -186,7 +187,7 @@ class _RaveState extends State<Rave> {
                           child: Slider(
                             value: getAbsoluteProgress(),
                             onChanged: (value) {
-                              seekToFromSliderValue(value);
+                              seekToFromSliderValueNoNotify(value);
                             },
                             onChangeEnd: (value) {
                               seekToFromSliderValue(value);
@@ -396,6 +397,13 @@ class _RaveState extends State<Rave> {
     if (!audioHandlerInitialized) return "Loading...";
     // Check if audio player has been initialized yet
     return _audioHandler.video.author;
+  }
+
+  void seekToFromSliderValueNoNotify(double value) {
+    _audioHandler.pauseNoNotify();
+    _audioHandler.seekNoNotify(Duration(
+        milliseconds:
+            (value * _audioHandler.video.duration!.inMilliseconds).toInt()));
   }
 
   void seekToFromSliderValue(double value) {

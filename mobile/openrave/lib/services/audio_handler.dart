@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 import 'package:audio_session/audio_session.dart';
+import 'backend_handler.dart';
 
 class RaveAudioHandler extends BaseAudioHandler
     with QueueHandler, SeekHandler, ChangeNotifier {
@@ -16,6 +17,7 @@ class RaveAudioHandler extends BaseAudioHandler
     ),
   );
   final YoutubeExplode _yt = YoutubeExplode();
+  final RoomController _roomController = RoomController();
 
   late Video video;
   Duration position = Duration.zero;
@@ -101,7 +103,7 @@ class RaveAudioHandler extends BaseAudioHandler
       await refreshMetadata(videoId);
       var link = await getLink(videoId);
       await _audioPlayer.setUrl(link);
-      play();
+      playNoNotify();
     } catch (e) {
       print("Error loading video: $e");
     }
@@ -124,18 +126,35 @@ class RaveAudioHandler extends BaseAudioHandler
 
   @override
   Future<void> play() async {
+    _roomController.play();
     _audioPlayer.play();
     predictedPlayingState = true;
   }
 
   @override
   Future<void> pause() async {
+    _roomController.pause();
+    _audioPlayer.pause();
+    predictedPlayingState = false;
+  }
+
+  Future<void> playNoNotify() async {
+    _audioPlayer.play();
+    predictedPlayingState = true;
+  }
+
+  Future<void> pauseNoNotify() async {
     _audioPlayer.pause();
     predictedPlayingState = false;
   }
 
   @override
-  Future<void> seek(Duration position) => _audioPlayer.seek(position);
+  Future<void> seek(Duration position) async {
+    _roomController.seek(position.inSeconds.toDouble());
+    _audioPlayer.seek(position);
+  }
+
+  Future<void> seekNoNotify(Duration position) => _audioPlayer.seek(position);
 
   @override
   Future<void> stop() async {
