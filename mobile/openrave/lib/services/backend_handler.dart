@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/material.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 class RoomController {
@@ -23,11 +24,14 @@ class RoomController {
 
     // Listen for incoming messages
     _channel.stream.listen((message) {
+      _eventController.add("alive");
       _handleMessage(message);
     }, onError: (error) {
       print('WebSocket error: $error');
+      _eventController.add("error");
     }, onDone: () {
       print('WebSocket connection closed');
+      _eventController.add("closed");
     });
 
     // Start keepalive to maintain connection

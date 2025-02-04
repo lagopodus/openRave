@@ -19,6 +19,7 @@ class _RaveState extends State<Rave> {
   late final RaveAudioHandler _audioHandler;
   bool audioHandlerInitialized = false;
   String localRoomCode = "";
+  ConnectionState backendConnectionState = ConnectionState.waiting;
 
   @override
   void initState() {
@@ -72,6 +73,15 @@ class _RaveState extends State<Rave> {
         _audioHandler.playNoNotify();
       } else if (event == "paused") {
         _audioHandler.pauseNoNotify();
+      } else if (event == "alive") {
+        backendConnectionState = ConnectionState.active;
+        setState(() {});
+      } else if (event == "error") {
+        backendConnectionState = ConnectionState.done;
+        setState(() {});
+      } else if (event == "closed") {
+        backendConnectionState = ConnectionState.done;
+        setState(() {});
       }
     });
 
@@ -115,10 +125,20 @@ class _RaveState extends State<Rave> {
         children: [
           Center(
             child: Padding(
-              padding: const EdgeInsets.all(20.0),
+              padding: const EdgeInsets.fromLTRB(20.0, 0, 20.0, 20.0),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
+                  SizedBox(
+                    width: MediaQuery.sizeOf(context).width * 0.3,
+                    child: Material(
+                      borderRadius: BorderRadius.circular(10),
+                      color: Colors.red,
+                      child: Center(
+                        child: getBackendConnectionInfo(),
+                      ),
+                    ),
+                  ),
                   SizedBox(
                     width: MediaQuery.sizeOf(context).width * 0.75,
                     height: MediaQuery.sizeOf(context).width * 0.75,
@@ -276,6 +296,30 @@ class _RaveState extends State<Rave> {
         ],
       ),
     );
+  }
+
+  dynamic getBackendConnectionInfo() {
+    //0.0 means it will be hidden; null means it will be shown
+    if (backendConnectionState == ConnectionState.waiting) {
+      return Text(
+        "Connecting...",
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: 13,
+        ),
+      );
+    } else if (backendConnectionState == ConnectionState.active) {
+      return null;
+    } else if (backendConnectionState == ConnectionState.done) {
+      return Text(
+        "Connection lost.",
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: 13,
+        ),
+      );
+    }
+    return null;
   }
 
   void seekBackToBeginning() {
