@@ -41,6 +41,40 @@ class RaveAudioHandler extends BaseAudioHandler
     );
     await session.setActive(true);
 
+    session.interruptionEventStream.listen((event) {
+      if (event.begin) {
+        switch (event.type) {
+          case AudioInterruptionType.duck:
+            // Another app started playing audio and we should duck.
+            print("Audio ducked");
+            break;
+          case AudioInterruptionType.pause:
+            // Another app started playing audio and we should pause.
+            print("Audio paused");
+            break;
+          case AudioInterruptionType.unknown:
+            // Another app started playing audio and we should pause.
+            print("Audio unkown plase");
+            break;
+        }
+      } else {
+        switch (event.type) {
+          case AudioInterruptionType.duck:
+            // The interruption ended and we should unduck.
+            print("Audio ducked over");
+            break;
+          case AudioInterruptionType.pause:
+            // The interruption ended and we should resume.
+            print("Audio paused over");
+            break;
+          case AudioInterruptionType.unknown:
+            // The interruption ended but we should not resume.
+            print("Audio unkown plase over");
+            break;
+        }
+      }
+    });
+
     _audioPlayer.positionStream.listen((event) {
       position = event;
       notifyListeners();
