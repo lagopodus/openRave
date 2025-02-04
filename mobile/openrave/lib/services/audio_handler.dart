@@ -170,11 +170,13 @@ class RaveAudioHandler extends BaseAudioHandler
   @override
   Future<void> skipToPrevious() async {
     //always restart the song instead of going back one song. I dont want that now!
+    _roomController.seek(0);
     await _audioPlayer.seek(Duration.zero);
   }
 
   @override
   Future<void> skipToNext() async {
+    _roomController.seek(_audioPlayer.duration!.inSeconds.toDouble());
     _audioPlayer.seek(_audioPlayer.duration!);
     _audioPlayer.pause();
   }
