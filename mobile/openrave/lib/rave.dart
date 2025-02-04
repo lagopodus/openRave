@@ -18,10 +18,12 @@ class Rave extends StatefulWidget {
 class _RaveState extends State<Rave> {
   late final RaveAudioHandler _audioHandler;
   bool audioHandlerInitialized = false;
+  String localRoomCode = "";
 
   @override
   void initState() {
     super.initState();
+    localRoomCode = widget.roomCode;
     _initAudioService();
   }
 
@@ -73,7 +75,7 @@ class _RaveState extends State<Rave> {
       }
     });
 
-    widget._roomController.initialize(widget.roomCode);
+    widget._roomController.initialize(localRoomCode);
   }
 
   @override
@@ -91,11 +93,11 @@ class _RaveState extends State<Rave> {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              SelectableText('Room: ${widget.roomCode}'),
+              SelectableText('Room: $localRoomCode'),
               const SizedBox(width: 10),
               IconButton(
                 onPressed: () async {
-                  await Clipboard.setData(ClipboardData(text: widget.roomCode));
+                  await Clipboard.setData(ClipboardData(text: localRoomCode));
                   // copied successfully
                 },
                 icon: Icon(
