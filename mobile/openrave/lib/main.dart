@@ -1,12 +1,20 @@
 import 'dart:ui';
 
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/services.dart';
 import 'intro.dart';
 import 'home.dart';
 import 'package:is_first_run/is_first_run.dart';
 
 void main() {
-  runApp(MyApp());
+  WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]).then((_) {
+    runApp(MyApp());
+  });
+  ;
 }
 
 class MyApp extends StatefulWidget {
