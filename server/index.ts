@@ -62,7 +62,7 @@ wss.on('connection', function connection(ws: WebSocket, request) {
       return;
     }
 
-    wss.clients.forEach(client => {
+    rooms[roomId].users.forEach(client => {
       if (client !== ws) {
         client.send(message.toString());
       }
