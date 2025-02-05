@@ -1,10 +1,14 @@
+import 'dart:async';
+
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:text_scroll/text_scroll.dart';
+import 'package:youtube_explode_dart/youtube_explode_dart.dart';
+
 import 'services/audio_handler.dart';
 import 'services/backend_handler.dart';
-import 'package:text_scroll/text_scroll.dart';
 
 class Rave extends StatefulWidget {
   Rave({super.key, required this.roomCode});
@@ -20,6 +24,12 @@ class _RaveState extends State<Rave> {
   bool audioHandlerInitialized = false;
   String localRoomCode = "";
   ConnectionState backendConnectionState = ConnectionState.waiting;
+
+  // Search related fields
+  bool _showSearchBar = false;
+  final TextEditingController _searchController = TextEditingController();
+  List<Video> _searchResults = [];
+  Timer? _debounce;
 
   @override
   void initState() {
@@ -38,12 +48,13 @@ class _RaveState extends State<Rave> {
     );
 
     _audioHandler.addListener(() {
-      setState(() {}); // Rebuild when Metadata updates
+      setState(() {}); // Rebuild when metadata updates
     });
 
     await _initWebsocket();
 
-    //await _audioHandler.loadAndPlay("tVGH-g6OQhg"); // Replace with dynamic video ID
+    // Example: preload a default video (if needed)
+    // await _audioHandler.loadAndPlay("tVGH-g6OQhg");
   }
 
   Future<void> _initWebsocket() async {
@@ -54,9 +65,8 @@ class _RaveState extends State<Rave> {
 
         String videoId = parts[1]; // Assuming videoId is at index 1
         double seekTime =
-            double.parse(parts[2]); // Assuming seekTime is at index 2
-        String state =
-            parts[3]; // Assuming the state (e.g., "playing") is at index 3
+        double.parse(parts[2]); // Assuming seekTime is at index 2
+        String state = parts[3]; // Assuming the state (e.g., "playing") is at index 3
         _audioHandler.catchUp(
             videoId, Duration(milliseconds: (seekTime * 1000).round()), state);
 
@@ -67,8 +77,8 @@ class _RaveState extends State<Rave> {
         _audioHandler.loadAndPlay(videoId);
       } else if (event.startsWith("seek: ")) {
         double seekTime = double.parse(event.substring(6));
-        _audioHandler
-            .seekNoNotify(Duration(milliseconds: (seekTime * 1000).round()));
+        _audioHandler.seekNoNotify(
+            Duration(milliseconds: (seekTime * 1000).round()));
       } else if (event == "playing") {
         _audioHandler.playNoNotify();
       } else if (event == "paused") {
@@ -91,215 +101,347 @@ class _RaveState extends State<Rave> {
   @override
   void dispose() {
     _audioHandler.stop();
+    _searchController.dispose();
+    _debounce?.cancel();
     super.dispose();
+  }
+
+  /// Executes a YouTube search using youtube_explode_dart.
+  Future<void> _performSearch() async {
+    final query = _searchController.text;
+    if (query.isEmpty) {
+      setState(() {
+        _searchResults = [];
+      });
+      return;
+    }
+    final yt = YoutubeExplode();
+    try {
+      final videos = await yt.search.getVideos(query);
+      final results = videos.take(10).toList();
+      setState(() {
+        _searchResults = results;
+      });
+    } catch (e) {
+      // Handle search error appropriately.
+      print("Search error: $e");
+    } finally {
+      yt.close();
+    }
+  }
+
+  /// Called when a user selects a search result.
+  void _selectSearchResult(Video video) {
+    // Load and play the selected video.
+    _audioHandler.loadAndPlay(video.id.value);
+    // Hide the search UI and clear results.
+    setState(() {
+      _showSearchBar = false;
+      _searchResults = [];
+      _searchController.clear();
+    });
+  }
+
+  /// Called on each change in the search text field.
+  void _onSearchChanged(String query) {
+    // Cancel any existing debounce timer.
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+
+    // Debounce the search to wait for 300ms after the user stops typing.
+    _debounce = Timer(const Duration(milliseconds: 300), () {
+      _performSearch();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
-      navigationBar: CupertinoNavigationBar(
-        middle: Center(
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              SelectableText('Room: $localRoomCode'),
-              const SizedBox(width: 10),
-              IconButton(
-                onPressed: () async {
-                  await Clipboard.setData(ClipboardData(text: localRoomCode));
-                  // copied successfully
-                },
-                icon: Icon(
-                  Icons.copy,
-                  color: Colors.blueAccent,
-                  size: 24.0,
-                  semanticLabel: 'Copy the room code.',
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-      child: Stack(
-        children: [
-          Center(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20.0, 0, 20.0, 20.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  SizedBox(
-                    width: MediaQuery.sizeOf(context).width * 0.3,
-                    child: Material(
-                      borderRadius: BorderRadius.circular(10),
-                      color: Colors.red,
-                      child: Center(
-                        child: getBackendConnectionInfo(),
+      // Wrap the page content in MediaQuery.removeViewInsets to prevent the keyboard from pushing up the page.
+      child: MediaQuery.removeViewInsets(
+        removeBottom: true,
+        context: context,
+        child: Stack(
+          children: [
+            // Main content
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20.0, 0, 20.0, 20.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    SizedBox(
+                      width: MediaQuery.sizeOf(context).width * 0.3,
+                      child: Material(
+                        borderRadius: BorderRadius.circular(10),
+                        color: Colors.red,
+                        child: Center(
+                          child: getBackendConnectionInfo(),
+                        ),
                       ),
                     ),
-                  ),
-                  SizedBox(
-                    width: MediaQuery.sizeOf(context).width * 0.75,
-                    height: MediaQuery.sizeOf(context).width * 0.75,
-                    child: Image.network(
-                      fit: BoxFit.cover,
-                      getCoverImageUrl(),
-                    ),
-                  ),
-                  const SizedBox(
-                    height: 20,
-                  ),
-                  SizedBox(
-                    width: MediaQuery.sizeOf(context).width * 0.78,
-                    child: TextScroll(
-                      getSongName(),
-                      intervalSpaces: 10,
-                      velocity: Velocity(pixelsPerSecond: Offset(20, 0)),
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 30,
-                        fontWeight: FontWeight.bold,
+                    SizedBox(
+                      width: MediaQuery.sizeOf(context).width * 0.75,
+                      height: MediaQuery.sizeOf(context).width * 0.75,
+                      child: Image.network(
+                        fit: BoxFit.cover,
+                        getCoverImageUrl(),
                       ),
-                      mode: TextScrollMode.endless,
-                      delayBefore: Duration(milliseconds: 10000),
-                      pauseBetween: Duration(milliseconds: 15000),
                     ),
-                  ),
-                  SizedBox(
-                    height: 3,
-                  ),
-                  SizedBox(
-                    width: MediaQuery.sizeOf(context).width * 0.78,
-                    child: TextScroll(
-                      getArtistName(),
-                      intervalSpaces: 10,
-                      velocity: Velocity(pixelsPerSecond: Offset(20, 0)),
-                      style: TextStyle(
+                    const SizedBox(height: 20),
+                    SizedBox(
+                      width: MediaQuery.sizeOf(context).width * 0.78,
+                      child: TextScroll(
+                        getSongName(),
+                        intervalSpaces: 10,
+                        velocity: Velocity(pixelsPerSecond: Offset(20, 0)),
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 30,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        mode: TextScrollMode.endless,
+                        delayBefore: Duration(milliseconds: 10000),
+                        pauseBetween: Duration(milliseconds: 15000),
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    SizedBox(
+                      width: MediaQuery.sizeOf(context).width * 0.78,
+                      child: TextScroll(
+                        getArtistName(),
+                        intervalSpaces: 10,
+                        velocity: Velocity(pixelsPerSecond: Offset(20, 0)),
+                        style: TextStyle(
                           color: Colors.white38,
                           fontSize: 15,
-                          fontWeight: FontWeight.bold),
-                      mode: TextScrollMode.endless,
-                      delayBefore: Duration(milliseconds: 10000),
-                      pauseBetween: Duration(milliseconds: 15000),
+                          fontWeight: FontWeight.bold,
+                        ),
+                        mode: TextScrollMode.endless,
+                        delayBefore: Duration(milliseconds: 10000),
+                        pauseBetween: Duration(milliseconds: 15000),
+                      ),
                     ),
-                  ),
-                  SizedBox(
-                    height: 20,
-                  ),
-                  Center(
-                    child: SizedBox(
-                      height: 20,
-                      width: double.infinity,
-                      child: Material(
-                        color: Colors.transparent,
-                        type: MaterialType.transparency,
-                        child: SliderTheme(
-                          data: SliderThemeData(
-                            trackShape: RectangularSliderTrackShape(),
-                            thumbShape: RoundSliderThumbShape(
-                              enabledThumbRadius: 6.5,
-                              elevation: 0,
+                    const SizedBox(height: 20),
+                    Center(
+                      child: SizedBox(
+                        height: 20,
+                        width: double.infinity,
+                        child: Material(
+                          color: Colors.transparent,
+                          type: MaterialType.transparency,
+                          child: SliderTheme(
+                            data: SliderThemeData(
+                              trackShape: RectangularSliderTrackShape(),
+                              thumbShape: RoundSliderThumbShape(
+                                enabledThumbRadius: 6.5,
+                                elevation: 0,
+                              ),
+                              trackHeight: 2,
+                              thumbColor: Colors.white,
+                              activeTrackColor: Colors.white,
+                              inactiveTrackColor: Colors.white38,
                             ),
-                            trackHeight: 2,
-                            thumbColor: Colors.white,
-                            activeTrackColor: Colors.white,
-                            inactiveTrackColor: Colors.white38,
-                          ),
-                          child: Slider(
-                            value: getAbsoluteProgress(),
-                            onChanged: (value) {
-                              seekToFromSliderValueNoNotify(value);
-                            },
-                            onChangeEnd: (value) {
-                              seekToFromSliderValue(value);
-                            },
+                            child: Slider(
+                              value: getAbsoluteProgress(),
+                              onChanged: (value) {
+                                seekToFromSliderValueNoNotify(value);
+                              },
+                              onChangeEnd: (value) {
+                                seekToFromSliderValue(value);
+                              },
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                  Center(
-                    child: SizedBox(
-                      width: MediaQuery.sizeOf(context).width * 0.78,
+                    Center(
+                      child: SizedBox(
+                        width: MediaQuery.sizeOf(context).width * 0.78,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              getProgressAsStringShort(),
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white54,
+                              ),
+                            ),
+                            Text(
+                              getDurationAsStringShort(),
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white54,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    Center(
                       child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text(
-                            getProgressAsStringShort(),
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white54,
+                          CupertinoButton(
+                            onPressed: () {
+                              // Jump back to the beginning.
+                              seekBackToBeginning();
+                            },
+                            child: Icon(
+                              CupertinoIcons.backward_fill,
+                              color: Colors.white,
+                              size: 30,
                             ),
                           ),
-                          Text(
-                            getDurationAsStringShort(),
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white54,
+                          // Pause/Play Button
+                          CupertinoButton(
+                            onPressed: () async {
+                              if (_audioHandler.isPlaying) {
+                                await _audioHandler.pause();
+                              } else {
+                                await _audioHandler.play();
+                              }
+                            },
+                            child: Icon(
+                              getPauseButtonState(),
+                              color: Colors.white,
+                              size: 60,
+                            ),
+                          ),
+                          CupertinoButton(
+                            onPressed: () {
+                              // Jump to the end.
+                              seekToEnd();
+                            },
+                            child: Icon(
+                              CupertinoIcons.forward_fill,
+                              color: Colors.white,
+                              size: 30,
                             ),
                           ),
                         ],
                       ),
-                    ),
-                  ),
-                  Center(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                    )
+                  ],
+                ),
+              ),
+            ),
+            // Search overlay (if enabled)
+            if (_showSearchBar)
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                // Adjust height as needed.
+                child: Material(
+                  color: Colors.black87.withOpacity(0.95),
+                  child: Padding(
+                    padding: const EdgeInsets.only(
+                        top: 40.0, left: 10.0, right: 10.0, bottom: 10.0),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        CupertinoButton(
-                          onPressed: () {
-                            //seekBackForXSeconds(10);
-                            seekBackToBeginning();
-                          },
-                          child: Icon(
-                            CupertinoIcons.backward_fill,
-                            color: Colors.white,
-                            size: 30,
-                          ),
+                        // Search text field
+                        CupertinoTextField(
+                          controller: _searchController,
+                          placeholder: 'Search YouTube Music...',
+                          style: TextStyle(color: Colors.white),
+                          placeholderStyle:
+                          TextStyle(color: Colors.white54),
+                          autofocus: true,
+                          onChanged: _onSearchChanged,
                         ),
-                        //Pause Play Button
-                        CupertinoButton(
-                          onPressed: () async {
-                            if (_audioHandler.isPlaying) {
-                              await _audioHandler.pause();
-                            } else {
-                              await _audioHandler.play();
-                            }
-                          },
-                          child: Icon(
-                            getPauseButtonState(),
-                            color: Colors.white,
-                            size: 60,
+                        const SizedBox(height: 10),
+                        // Display live search results (if any)
+                        _searchResults.isEmpty
+                            ? Container(
+                          height: 50,
+                          alignment: Alignment.center,
+                          child: Text(
+                            'No results yet.',
+                            style: TextStyle(color: Colors.white54),
                           ),
-                        ),
-                        CupertinoButton(
-                          onPressed: () {
-                            //seekForwardForXSeconds(10);
-                            seekToEnd();
-                          },
-                          child: Icon(
-                            CupertinoIcons.forward_fill,
-                            color: Colors.white,
-                            size: 30,
+                        )
+                            : Container(
+                          height: 200,
+                          child: ListView.builder(
+                            itemCount: _searchResults.length,
+                            itemBuilder: (context, index) {
+                              final video = _searchResults[index];
+                              return ListTile(
+                                leading: Image.network(
+                                  video.thumbnails.highResUrl,
+                                  width: 50,
+                                  fit: BoxFit.cover,
+                                ),
+                                title: Text(
+                                  video.title,
+                                  style:
+                                  TextStyle(color: Colors.white),
+                                ),
+                                subtitle: Text(
+                                  video.author,
+                                  style: TextStyle(
+                                      color: Colors.white54),
+                                ),
+                                onTap: () =>
+                                    _selectSearchResult(video),
+                              );
+                            },
                           ),
                         ),
                       ],
                     ),
-                  )
-                ],
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+      navigationBar: CupertinoNavigationBar(
+        middle: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SelectableText('Room: $localRoomCode'),
+            const SizedBox(width: 10),
+            IconButton(
+              onPressed: () async {
+                await Clipboard.setData(
+                    ClipboardData(text: localRoomCode));
+              },
+              icon: Icon(
+                Icons.copy,
+                color: Colors.blueAccent,
+                size: 24.0,
+                semanticLabel: 'Copy the room code.',
               ),
             ),
+          ],
+        ),
+        trailing: CupertinoButton(
+          padding: EdgeInsets.zero,
+          onPressed: () {
+            // Toggle the search overlay.
+            setState(() {
+              _showSearchBar = !_showSearchBar;
+              if (!_showSearchBar) {
+                _searchResults = [];
+                _searchController.clear();
+              }
+            });
+          },
+          child: Icon(
+            _showSearchBar ? CupertinoIcons.clear : CupertinoIcons.search,
+            color: Colors.blueAccent,
           ),
-        ],
+        ),
       ),
     );
   }
 
   dynamic getBackendConnectionInfo() {
-    //0.0 means it will be hidden; null means it will be shown
     if (backendConnectionState == ConnectionState.waiting) {
       return Text(
         "Connecting...",
@@ -419,7 +561,7 @@ class _RaveState extends State<Rave> {
     return formattedTime(timeInSecond: _audioHandler.position.inSeconds);
   }
 
-  formattedTime({required int timeInSecond}) {
+  String formattedTime({required int timeInSecond}) {
     int sec = timeInSecond % 60;
     int min = (timeInSecond / 60).floor();
     String minute = min.toString().length <= 1 ? "0$min" : "$min";
@@ -429,19 +571,16 @@ class _RaveState extends State<Rave> {
 
   String getIsPlaying() {
     if (!audioHandlerInitialized) return "Loading...";
-
     return _audioHandler.isPlaying ? "Yes" : "No";
   }
 
   String getSongName() {
     if (!audioHandlerInitialized) return "Loading...";
-
     return _audioHandler.video.title;
   }
 
   String getArtistName() {
     if (!audioHandlerInitialized) return "Loading...";
-    // Check if audio player has been initialized yet
     return _audioHandler.video.author;
   }
 
@@ -449,13 +588,13 @@ class _RaveState extends State<Rave> {
     _audioHandler.pauseNoNotify();
     _audioHandler.seekNoNotify(Duration(
         milliseconds:
-            (value * _audioHandler.video.duration!.inMilliseconds).toInt()));
+        (value * _audioHandler.video.duration!.inMilliseconds).toInt()));
   }
 
   void seekToFromSliderValue(double value) {
     _audioHandler.pause();
     _audioHandler.seek(Duration(
         milliseconds:
-            (value * _audioHandler.video.duration!.inMilliseconds).toInt()));
+        (value * _audioHandler.video.duration!.inMilliseconds).toInt()));
   }
 }
